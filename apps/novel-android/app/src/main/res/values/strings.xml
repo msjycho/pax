@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PAX Novel</string>
+    <string name="write_subtitle">PlayAX · 집필 — 로컬 저장 (Room)</string>
+    <string name="nav_write">집필</string>
+    <string name="nav_library">라이브러리</string>
+    <string name="nav_settings">설정</string>
+    <string name="adult_gate_title">성인 콘텐츠 (18+)</string>
+    <string name="adult_gate_body">이 라이브러리에는 합의된 성인 캐릭터 간의 성적 묘사가 포함될 수 있습니다. 만 18세 이상만 잠금을 해제하세요. 미성년자 관련 성적 콘텐츠는 제공하지 않습니다.</string>
+    <string name="adult_confirm">만 18세 이상입니다</string>
+    <string name="adult_locked_placeholder">[성인 장면 — 설정에서 18+ 잠금 해제 후 열람]</string>
+    <string name="content_policy">원작 AI 연재만 제공합니다. 기존 무협·웹소설을 수집·재배포하지 않습니다.</string>
+</resources>

@@ -1,0 +1,49 @@
+{
+  "works": [
+    {
+      "slug": "blade-of-ash",
+      "title": "재의 검가",
+      "authorCredit": "PlayAX Original (AI-assisted)",
+      "contentRating": "adult",
+      "origin": "original_ai",
+      "synopsis": "멸문당한 검가의 유일한 후예가 중원을 떠돌며 무공을 회복하고, 동행한 성인 여협과 깊어지는 인연 속에서 복수와 사랑을 동시에 짊어지는 원작 무협 장편(예정 4권). 기존 작품 무단 복제 아님.",
+      "volumes": [
+        {
+          "index": 1,
+          "title": "잿빛 입문",
+          "chapters": [
+            {
+              "index": 1,
+              "title": "폐허에서 깨어나다",
+              "assetPath": "novels/blade-of-ash/vol-1/ch-001.md",
+              "sceneTags": ["martial", "setup"],
+              "hasAdultPassages": false
+            },
+            {
+              "index": 2,
+              "title": "여협의 불꽃",
+              "assetPath": "novels/blade-of-ash/vol-1/ch-002.md",
+              "sceneTags": ["martial", "romance", "erotic"],
+              "hasAdultPassages": true
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "title": "피바람 강호 (골격)",
+          "chapters": []
+        },
+        {
+          "index": 3,
+          "title": "혈연의 칼끝 (골격)",
+          "chapters": []
+        },
+        {
+          "index": 4,
+          "title": "재가 꽃이 될 때 (골격)",
+          "chapters": []
+        }
+      ]
+    }
+  ]
+}

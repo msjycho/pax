@@ -32,3 +32,7 @@
 ## 아직 비어 있는 칸
 
 대표자, 사업자등록번호, 주소, 전화. 사업자등록증을 받은 뒤 `index.html`만 고치면 됩니다.
+
+## Android (실험)
+
+소설 집필 + 원작 AI 무협 라이브러리 스캐폴드: [`apps/novel-android/`](apps/novel-android/). GitHub Pages 사이트와 별개이며, 출시 전 전용 레포 분리를 권장합니다.
