@@ -45,7 +45,7 @@ fun LibraryScreen(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text("원작 라이브러리", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text("PAX · 원작 라이브러리", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Text(stringResource(R.string.content_policy), style = MaterialTheme.typography.bodySmall)
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {

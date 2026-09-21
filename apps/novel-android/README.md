@@ -6,9 +6,10 @@ PAX(`playax.kr`) 정적 사이트 레포 안의 **실험용 Android 모듈**입�
 
 ## 스택
 
-- Kotlin, Jetpack Compose, Navigation, DataStore
+- Kotlin, Jetpack Compose, Navigation, DataStore, **Room** (집필 영속화)
 - 번들 원작: `app/src/main/assets/novels/`
 - 패키지(임시): `kr.playax.novel`
+- 런처 표시명: **PAX Novel**
 
 ## 콘텐츠 정책
 
@@ -25,4 +26,4 @@ cd apps/novel-android
 ./gradlew :app:assembleDebug
 ```
 
-이 클라우드 에이전트 환경에는 Android SDK가 없어 APK 빌드는 검증하지 않았습니다.
+이 모듈은 Room으로 작품/회차/본문을 로컬 DB에 저장합니다. 에뮬레이터·SDK는 환경에 따라 별도 설치가 필요합니다.

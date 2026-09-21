@@ -4,8 +4,12 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kr.playax.novel.content.BundledCatalog
@@ -30,6 +34,15 @@ class AppViewModel(
     val works: StateFlow<List<UserWork>> = writingRepository.works
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    private val selectedWorkId = MutableStateFlow<String?>(null)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val selectedChapters: StateFlow<List<UserChapter>> = selectedWorkId
+        .flatMapLatest { id ->
+            if (id == null) flowOf(emptyList()) else writingRepository.observeChapters(id)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     fun catalogWorks(): List<CatalogWork> = catalog.works()
 
     fun loadChapterBody(workSlug: String, volumeIndex: Int, chapterIndex: Int): String =
@@ -47,7 +60,9 @@ class AppViewModel(
         viewModelScope.launch { writingRepository.addWork(title) }
     }
 
-    fun chaptersFor(workId: String): List<UserChapter> = writingRepository.chaptersFor(workId)
+    fun selectWork(workId: String?) {
+        selectedWorkId.value = workId
+    }
 
     fun upsertChapter(workId: String, chapter: UserChapter) {
         viewModelScope.launch { writingRepository.upsertChapter(workId, chapter) }

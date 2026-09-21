@@ -1,9 +1,11 @@
 package kr.playax.novel.data
 
 import android.content.Context
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kr.playax.novel.data.db.ChapterEntity
+import kr.playax.novel.data.db.NovelDatabase
+import kr.playax.novel.data.db.WorkEntity
 import java.util.UUID
 
 data class UserWork(
@@ -21,41 +23,70 @@ data class UserChapter(
 )
 
 /**
- * In-memory writing store for the scaffold. Replace with Room in M1.
+ * Room-backed writing store — works/chapters survive process death and app restart.
  */
-class UserWritingRepository(@Suppress("UNUSED_PARAMETER") context: Context) {
-    private val _works = MutableStateFlow<List<UserWork>>(emptyList())
-    val works: StateFlow<List<UserWork>> = _works.asStateFlow()
+class UserWritingRepository(context: Context) {
+    private val dao = NovelDatabase.get(context).writingDao()
 
-    private val chapters = mutableMapOf<String, MutableList<UserChapter>>()
+    val works: Flow<List<UserWork>> = dao.observeWorks().map { list ->
+        list.map { it.toUserWork() }
+    }
+
+    fun observeChapters(workId: String): Flow<List<UserChapter>> =
+        dao.observeChapters(workId).map { list -> list.map { it.toUserChapter() } }
+
+    suspend fun chaptersFor(workId: String): List<UserChapter> =
+        dao.chaptersFor(workId).map { it.toUserChapter() }
 
     suspend fun addWork(title: String) {
         val trimmed = title.trim().ifEmpty { "무제 작품" }
-        val work = UserWork(
-            id = UUID.randomUUID().toString(),
+        val now = System.currentTimeMillis()
+        val workId = UUID.randomUUID().toString()
+        val work = WorkEntity(
+            id = workId,
             title = trimmed,
-            updatedAtEpochMs = System.currentTimeMillis(),
+            updatedAtEpochMs = now,
+            createdAtEpochMs = now,
         )
-        chapters[work.id] = mutableListOf(
-            UserChapter(
-                id = UUID.randomUUID().toString(),
-                index = 1,
-                title = "1화",
-                body = "",
-            ),
+        val chapter = ChapterEntity(
+            id = UUID.randomUUID().toString(),
+            workId = workId,
+            index = 1,
+            title = "1화",
+            body = "",
+            status = "draft",
+            updatedAtEpochMs = now,
         )
-        _works.value = _works.value + work
+        dao.insertWorkWithFirstChapter(work, chapter)
     }
-
-    fun chaptersFor(workId: String): List<UserChapter> =
-        chapters[workId]?.sortedBy { it.index }.orEmpty()
 
     suspend fun upsertChapter(workId: String, chapter: UserChapter) {
-        val list = chapters.getOrPut(workId) { mutableListOf() }
-        val idx = list.indexOfFirst { it.id == chapter.id }
-        if (idx >= 0) list[idx] = chapter else list.add(chapter)
-        _works.value = _works.value.map {
-            if (it.id == workId) it.copy(updatedAtEpochMs = System.currentTimeMillis()) else it
-        }
+        val now = System.currentTimeMillis()
+        dao.upsertChapterAndTouchWork(
+            chapter = ChapterEntity(
+                id = chapter.id,
+                workId = workId,
+                index = chapter.index,
+                title = chapter.title,
+                body = chapter.body,
+                status = chapter.status,
+                updatedAtEpochMs = now,
+            ),
+            workUpdatedAt = now,
+        )
     }
+
+    private fun WorkEntity.toUserWork() = UserWork(
+        id = id,
+        title = title,
+        updatedAtEpochMs = updatedAtEpochMs,
+    )
+
+    private fun ChapterEntity.toUserChapter() = UserChapter(
+        id = id,
+        index = index,
+        title = title,
+        body = body,
+        status = status,
+    )
 }

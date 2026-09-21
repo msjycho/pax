@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">PlayAX Novel</string>
+    <string name="app_name">PAX Novel</string>
+    <string name="write_subtitle">PlayAX · 집필 — 로컬 저장 (Room)</string>
     <string name="nav_write">집필</string>
     <string name="nav_library">라이브러리</string>
     <string name="nav_settings">설정</string>

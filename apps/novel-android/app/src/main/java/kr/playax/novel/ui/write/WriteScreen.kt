@@ -15,25 +15,32 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kr.playax.novel.AppViewModel
+import kr.playax.novel.R
 import kr.playax.novel.data.UserChapter
 
 @Composable
 fun WriteScreen(appViewModel: AppViewModel) {
     val works by appViewModel.works.collectAsState()
+    val chapters by appViewModel.selectedChapters.collectAsState()
     var selectedWorkId by remember { mutableStateOf<String?>(null) }
     var newTitle by remember { mutableStateOf("") }
 
+    LaunchedEffect(selectedWorkId) {
+        appViewModel.selectWork(selectedWorkId)
+    }
+
     val selected = works.find { it.id == selectedWorkId }
-    val chapters = selected?.let { appViewModel.chaptersFor(it.id) }.orEmpty()
     var editing by remember(selectedWorkId, chapters) {
         mutableStateOf(chapters.firstOrNull())
     }
@@ -44,8 +51,15 @@ fun WriteScreen(appViewModel: AppViewModel) {
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text("PlayAX Novel", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("집필 — 로컬 초안 (스캐폴드)", style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = stringResource(R.string.app_name),
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            text = stringResource(R.string.write_subtitle),
+            style = MaterialTheme.typography.bodyMedium,
+        )
 
         OutlinedTextField(
             value = newTitle,
@@ -116,7 +130,7 @@ private fun ChapterEditor(chapter: UserChapter, onChange: (UserChapter) -> Unit)
         label = { Text("회차 제목") },
         singleLine = true,
     )
-    Spacer(Modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(8.dp))
     OutlinedTextField(
         value = body,
         onValueChange = {
@@ -128,5 +142,5 @@ private fun ChapterEditor(chapter: UserChapter, onChange: (UserChapter) -> Unit)
             .height(280.dp),
         label = { Text("본문") },
     )
-    Text("${body.length}자 · ${chapter.status}", style = MaterialTheme.typography.labelMedium)
+    Text("${body.length}자 · ${chapter.status} · 자동 저장", style = MaterialTheme.typography.labelMedium)
 }
