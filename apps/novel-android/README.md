@@ -8,7 +8,7 @@ PAX(`playax.kr`) 정적 사이트 레포 안의 **실험용 Android 모듈**입�
 
 - Kotlin, Jetpack Compose, Navigation, DataStore, **Room** (집필 영속화)
 - 번들 원작: `app/src/main/assets/novels/`
-- 패키지(임시): `kr.playax.novel`
+- 패키지(확정): `kr.playax.novel` (`applicationId` / `namespace`)
 - 런처 표시명: **PAX Novel**
 
 ## 콘텐츠 정책
