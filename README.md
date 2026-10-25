@@ -7,27 +7,15 @@
 - 방침: https://playax.kr/privacy.html
 - 연결 전 임시: https://msjycho.github.io/pax/
 
-## 가비아 DNS (지금 할 일)
+## 도메인 연결 상태 (2026-10-25)
 
-네임서버는 **가비아 기본값 그대로** 두고, 레코드만 넣습니다.
-
-| 호스트 | 타입 | 값 |
-|--------|------|-----|
-| `@` (또는 빈칸) | A | `185.199.108.153` |
-| `@` | A | `185.199.109.153` |
-| `@` | A | `185.199.110.153` |
-| `@` | A | `185.199.111.153` |
-| `www` | CNAME | `msjycho.github.io` |
-
-가비아: 도메인 관리 → playax.kr → **DNS 관리** / 설정.
-
-반영까지 수 분~수 시간 걸릴 수 있습니다. HTTPS는 GitHub가 인증서를 발급한 뒤에 됩니다.
+`playax.kr`의 DNS A 레코드가 GitHub Pages 주소로 확인되고 `https://playax.kr/`가 HTTPS 200 응답을 반환합니다. 저장소의 `CNAME` 파일에는 `playax.kr`가 설정되어 있습니다. 서브도메인을 사용하거나 DNS를 변경할 때는 도메인 관리 콘솔과 GitHub Pages 설정을 함께 확인합니다.
 
 ## 그다음
 
 1. [Search Console](https://search.google.com/search-console)에 `playax.kr` 도메인 속성 추가, TXT를 가비아 DNS에 넣고 인증
-2. Play Console 조직 웹사이트에 `https://playax.kr/` 입력
-3. `contact@playax.kr` 메일 포워딩 (가비아 메일)
+2. Play Console 웹사이트 URL은 `https://playax.kr/` 사용
+3. `contact@playax.kr` 메일 수신/포워딩 상태 확인
 
 ## 아직 비어 있는 칸
 
