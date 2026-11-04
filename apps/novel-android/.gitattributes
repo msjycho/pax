@@ -1,0 +1,2 @@
+# Ignore Android scaffold artifacts if Pages ever expands
+# (site still publishes from repo root HTML only)
