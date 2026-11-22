@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>지구사랑 습관</title>
+<meta name="description" content="하루 미션 세 개로 탄소와 돈을 아끼는 지구사랑 습관 기록 앱.">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@500;700&display=swap">
+<style>
+/* Layout: 생활 장부. 위는 오늘의 숫자(연속일·아낀 탄소·레벨), 왼쪽은 '오늘 할 실천'(미션·습관·플라스틱), 오른쪽은 '우리 집 자원'(고지서 기록·포인트 안내). 폰에서는 한 줄. */
+:root{
+  --bg:#F2F4F1; --surface:#FFFFFF; --ink:#1B2320; --muted:#5D6B66; --line:#DCE2DE;
+  --accent:#2E6B5E; --accent-soft:#E1EEEA; --warn:#B0532B; --warn-soft:#F7E6DD;
+  --energy:#A8741A; --energy-soft:#F5EBD6; --water:#2D6A96; --water-soft:#E0ECF5;
+  --f-display:"Noto Serif KR","Nanum Myeongjo",Georgia,serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111614; --surface:#19201D; --ink:#E5EBE8; --muted:#92A09A; --line:#2A3430;
+  --accent:#72C2AC; --accent-soft:#1E302B; --warn:#E3906A; --warn-soft:#35231B;
+  --energy:#E0B060; --energy-soft:#342A17; --water:#7DB4DD; --water-soft:#172A38; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#19201D; --ink:#E5EBE8; --muted:#92A09A; --line:#2A3430;
+  --accent:#72C2AC; --accent-soft:#1E302B; --warn:#E3906A; --warn-soft:#35231B;
+  --energy:#E0B060; --energy-soft:#342A17; --water:#7DB4DD; --water-soft:#172A38; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;margin-bottom:22px}
+header h1{font-family:var(--f-display);font-weight:700;font-size:clamp(1.6rem,3.6vw,2.2rem);margin:0;line-height:1.2}
+.date{color:var(--muted);font-size:.92rem;margin-top:4px}
+.tally{display:flex;gap:10px;flex-wrap:wrap}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:104px}
+.tile .k{font-size:.72rem;letter-spacing:.06em;color:var(--muted)}
+.tile .v{font-family:var(--f-mono);font-size:1.35rem;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.25}
+.tile .v small{font-size:.75rem;color:var(--muted);margin-left:2px}
+.grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.col{display:flex;flex-direction:column;gap:20px;min-width:0}
+section{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;min-width:0}
+h2{font-size:.78rem;letter-spacing:.08em;color:var(--muted);font-weight:600;margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.lead{background:var(--ink);color:var(--bg);border:none;padding:24px}
+.lead h2{color:var(--bg);opacity:.7}
+.lead .q{font-family:var(--f-display);font-size:clamp(1.25rem,2.8vw,1.6rem);font-weight:700;line-height:1.35;margin:0 0 4px;text-wrap:balance}
+.lead .sub{opacity:.7;font-size:.88rem;margin:0 0 16px}
+.missions{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.missions li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border-radius:8px;background:color-mix(in srgb,var(--bg) 9%,transparent);border:1px solid color-mix(in srgb,var(--bg) 18%,transparent)}
+.missions li.done{background:color-mix(in srgb,var(--accent) 30%,transparent);border-color:transparent}
+.missions li.done .mt{text-decoration:line-through;opacity:.75}
+.mt{font-weight:500}
+.mh{font-size:.8rem;opacity:.7}
+.co2{font-family:var(--f-mono);font-size:.8rem;opacity:.85;white-space:nowrap}
+.check{appearance:none;width:24px;height:24px;border-radius:6px;border:2px solid currentColor;margin:0;cursor:pointer;display:grid;place-items:center;background:transparent;color:inherit}
+.check:checked{background:var(--accent);border-color:var(--accent)}
+.check:checked::after{content:"";width:6px;height:11px;border:solid var(--ink);border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.lead .check:checked::after{border-color:var(--ink)}
+.check:focus-visible,.btn:focus-visible,.cell:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:inherit;font-size:.88rem;font-weight:500;padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.btn.small{padding:4px 10px;font-size:.78rem}
+.btn.ghost{background:transparent}
+.lead .btn{background:transparent;color:var(--bg);border-color:color-mix(in srgb,var(--bg) 40%,transparent)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.note{color:var(--muted);font-size:.8rem;margin:10px 0 0}
+.lead .note{color:var(--bg);opacity:.6}
+/* 습관 격자 */
+.habits{width:100%;border-collapse:collapse;font-size:.9rem}
+.habits th{font-weight:500;font-size:.72rem;color:var(--muted);text-align:center;padding:0 0 6px;font-family:var(--f-mono)}
+.habits th.today{color:var(--accent)}
+.habits td{padding:5px 0;border-top:1px solid var(--line);text-align:center}
+.habits td.name{text-align:left;padding-right:8px;overflow-wrap:anywhere}
+.habits td.st{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);text-align:right;white-space:nowrap;padding-left:6px}
+.cell{width:26px;height:26px;border-radius:6px;border:1px solid var(--line);background:transparent;cursor:pointer;padding:0;display:inline-block;vertical-align:middle}
+.cell.on{background:var(--accent);border-color:var(--accent)}
+.cell.today{border-color:var(--accent);border-width:2px}
+.x{border:none;background:none;color:var(--muted);cursor:pointer;font:inherit;font-size:.9rem;padding:0 4px}
+.x:hover{color:var(--warn)}
+.add{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.add input,.field input,.field select,textarea{font:inherit;font-size:.9rem;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-width:0}
+.add input{flex:1 1 180px}
+/* 플라스틱 */
+.plastic{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center}
+@media (max-width:460px){.plastic{grid-template-columns:minmax(0,1fr)}}
+.counter{display:flex;align-items:center;gap:10px}
+.counter .n{font-family:var(--f-mono);font-size:2.2rem;font-weight:500;min-width:2ch;text-align:center;font-variant-numeric:tabular-nums}
+.round{width:40px;height:40px;border-radius:50%;font-size:1.2rem;padding:0;display:grid;place-items:center}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;align-items:end;height:84px}
+.week .b{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;height:100%;font-family:var(--f-mono);font-size:.68rem;color:var(--muted)}
+.week .b i{display:block;width:100%;max-width:28px;background:var(--warn);border-radius:3px 3px 0 0;min-height:2px}
+.week .b.zero i{background:var(--accent)}
+.week .b.today span:last-child{color:var(--ink);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font:inherit;font-size:.78rem;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--warn)}
+/* 자원 */
+.form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;align-items:end}
+@media (max-width:520px){.form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:.72rem;color:var(--muted)}
+.field input,.field select{width:100%}
+.tbl-wrap{overflow-x:auto;margin-top:14px}
+table.res{width:100%;border-collapse:collapse;font-size:.85rem;font-variant-numeric:tabular-nums}
+table.res th{font-weight:500;font-size:.72rem;color:var(--muted);text-align:right;padding:4px 6px;white-space:nowrap}
+table.res th:first-child,table.res td:first-child{text-align:left}
+table.res td{padding:7px 6px;border-top:1px solid var(--line);text-align:right;font-family:var(--f-mono);white-space:nowrap}
+.e{color:var(--energy)} .w{color:var(--water)}
+.delta{font-size:.72rem;padding:1px 6px;border-radius:999px}
+.delta.down{background:var(--accent-soft);color:var(--accent)}
+.delta.up{background:var(--warn-soft);color:var(--warn)}
+.bars{display:flex;gap:6px;align-items:end;height:110px;margin-top:14px;padding-top:6px;border-bottom:1px solid var(--line)}
+.bars .m{flex:1 1 0;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end;height:100%;min-width:0}
+.bars .m .stack{display:flex;flex-direction:column;justify-content:flex-end;border-radius:3px 3px 0 0;overflow:hidden}
+.bars .seg-e{background:var(--energy)} .bars .seg-g{background:var(--warn)} .bars .seg-w{background:var(--water)}
+.bars .val{font-family:var(--f-mono);font-size:.66rem;color:var(--muted);text-align:center}
+.bar-x{display:flex;gap:6px;font-family:var(--f-mono);font-size:.66rem;color:var(--muted)}
+.bar-x span{flex:1 1 0;text-align:center;min-width:0}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.75rem;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:0}
+.verdict{margin-top:14px;padding:12px 14px;border-radius:8px;background:var(--accent-soft);font-size:.88rem}
+.verdict.bad{background:var(--warn-soft)}
+.verdict b{font-family:var(--f-mono);font-weight:500}
+.banner{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;font-size:.8rem;background:var(--energy-soft);color:var(--ink);border-radius:8px;padding:8px 12px;margin-bottom:12px}
+/* 포인트 */
+.pts{list-style:none;margin:0;padding:0}
+.pts li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:.88rem}
+.pts li:first-child{border-top:none}
+.pts .p{font-family:var(--f-mono);font-size:.82rem;color:var(--accent);white-space:nowrap}
+.tag{display:inline-block;font-size:.68rem;padding:1px 7px;border-radius:999px;background:var(--warn-soft);color:var(--warn);margin-left:6px;vertical-align:1px}
+a{color:var(--accent)}
+.links{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:.88rem}
+textarea{width:100%;min-height:110px;font-family:var(--f-mono);font-size:.78rem;resize:vertical}
+.share-text{white-space:pre-wrap;font-size:.88rem;background:var(--bg);border-radius:8px;padding:12px 14px;margin:0 0 10px;border:1px dashed var(--line)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:.85rem;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+footer{color:var(--muted);font-size:.78rem;margin-top:24px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>지구사랑 습관</h1>
+      <div class="date" id="today"></div>
+    </div>
+    <div class="tally" aria-label="나의 기록">
+      <div class="tile"><div class="k">연속 실천</div><div class="v" id="streak">0<small>일</small></div></div>
+      <div class="tile"><div class="k">오늘 아낀 탄소</div><div class="v" id="todayCo2">0<small>g</small></div></div>
+      <div class="tile"><div class="k">누적 아낀 탄소</div><div class="v" id="totalCo2">0<small>kg</small></div></div>
+      <div class="tile"><div class="k">단계</div><div class="v" id="level">새싹</div></div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="col">
+      <section class="lead" aria-labelledby="mTitle">
+        <h2 id="mTitle"><span>오늘의 미션 세 가지</span><button class="btn small" id="reroll" type="button">다른 미션</button></h2>
+        <p class="q" id="mQuote">작은 실천 세 개면 오늘 하루 몫은 충분합니다.</p>
+        <p class="sub" id="mSub">하나만 해도 연속 기록이 이어집니다.</p>
+        <ul class="missions" id="missions"></ul>
+        <p class="note">탄소 수치는 흔히 인용되는 값을 바탕으로 한 대략적인 추정치입니다.</p>
+      </section>
+
+      <section aria-labelledby="hTitle">
+        <h2 id="hTitle"><span>매일 습관 · 최근 7일</span><span id="hSum"></span></h2>
+        <div style="overflow-x:auto">
+          <table class="habits" id="habits"></table>
+        </div>
+        <form class="add" id="habitForm">
+          <input id="habitInput" placeholder="새 습관 (예: 손수건 쓰기)" maxlength="30" aria-label="새 습관 이름">
+          <button class="btn" type="submit">습관 추가</button>
+        </form>
+        <p class="note">지난 날짜도 눌러서 고칠 수 있습니다. 오른쪽 숫자는 이어진 날 수입니다.</p>
+      </section>
+
+      <section aria-labelledby="pTitle">
+        <h2 id="pTitle"><span>오늘 쓴 일회용 플라스틱</span><span id="pWeek"></span></h2>
+        <div class="plastic">
+          <div>
+            <div class="counter">
+              <button class="btn round" id="pMinus" type="button" aria-label="하나 빼기">−</button>
+              <span class="n" id="pCount" aria-live="polite">0</span>
+              <button class="btn round" id="pPlus" type="button" aria-label="하나 더하기">+</button>
+            </div>
+            <div class="chips" id="pChips"></div>
+          </div>
+          <div class="week" id="pBars" aria-label="최근 7일 플라스틱 개수"></div>
+        </div>
+        <p class="note">컵, 빨대, 배달용기, 생수병, 비닐봉투처럼 한 번 쓰고 버린 것을 셉니다. 0개인 날은 초록색입니다.</p>
+      </section>
+    </div>
+
+    <div class="col">
+      <section aria-labelledby="rTitle">
+        <h2 id="rTitle"><span>우리 집 자원 · 월별 고지서</span></h2>
+        <div class="banner" id="sampleBanner" hidden>
+          <span>아래는 예시 기록입니다. 내 고지서를 넣으면 예시는 사라집니다.</span>
+          <button class="btn small" id="clearSample" type="button">예시 지우기</button>
+        </div>
+        <form class="form" id="resForm">
+          <div class="field"><label for="rMonth">월</label><input id="rMonth" type="month" required></div>
+          <div class="field"><label for="rElec">전기 kWh</label><input id="rElec" type="number" min="0" step="1" inputmode="decimal" placeholder="320"></div>
+          <div class="field"><label for="rGas">도시가스 m³</label><input id="rGas" type="number" min="0" step="0.1" inputmode="decimal" placeholder="60"></div>
+          <div class="field"><label for="rWater">수도 m³</label><input id="rWater" type="number" min="0" step="0.1" inputmode="decimal" placeholder="14"></div>
+        </form>
+        <div class="row" style="margin-top:10px">
+          <button class="btn primary" type="submit" form="resForm">이 달 저장</button>
+          <span class="note" style="margin:0">같은 달을 다시 저장하면 덮어씁니다.</span>
+        </div>
+        <div class="bars" id="resBars" aria-label="월별 탄소 배출량 막대"></div>
+        <div class="bar-x" id="resX"></div>
+        <div class="legend"><span><i style="background:var(--energy)"></i>전기</span><span><i style="background:var(--warn)"></i>도시가스</span><span><i style="background:var(--water)"></i>수도</span><span>단위 kgCO₂</span></div>
+        <div class="tbl-wrap"><table class="res" id="resTable"></table></div>
+        <div class="verdict" id="verdict" hidden></div>
+        <p class="note">환산 계수(탄소포인트제에서 쓰던 값): 전기 0.4781, 도시가스 2.176, 수도 0.237 kgCO₂ 단위당.</p>
+      </section>
+
+      <section aria-labelledby="cTitle">
+        <h2 id="cTitle"><span>실천하면 돈으로 돌아옵니다</span></h2>
+        <p style="margin:0 0 10px;font-size:.9rem">정부 <b>탄소중립포인트 녹색생활 실천</b>은 1인 연 최대 7만 원입니다. 아래는 2026년 11월 30일까지 진행 중인 2배 행사 단가입니다.<span class="tag">곧 종료</span></p>
+        <ul class="pts">
+          <li><span>배달앱 다회용기 주문</span><span class="p">1,000원/회</span></li>
+          <li><span>개인용기에 식품 포장</span><span class="p">1,000원/회</span></li>
+          <li><span>친환경 인증 제품 구매</span><span class="p">1,000원/건</span></li>
+          <li><span>텀블러·개인컵 (참여 카페)</span><span class="p">600원/회</span></li>
+          <li><span>고품질 재활용품 배출</span><span class="p">600원/kg</span></li>
+          <li><span>공유자전거 (따릉이·지쿠·누비자)</span><span class="p">400원/km</span></li>
+          <li><span>무공해차 대여 (쏘카·그린카)</span><span class="p">200원/km</span></li>
+          <li><span>일회용컵 반환 · 잔반 제로</span><span class="p">200원/회</span></li>
+          <li><span>장바구니 사용</span><span class="p">100원/회</span></li>
+          <li><span>폐휴대폰 반납</span><span class="p">2,000원/개</span></li>
+          <li><span>베란다 태양광 설치</span><span class="p">2만 원/회</span></li>
+        </ul>
+        <p class="note">12월부터는 대체로 절반 수준의 기본 단가로 돌아갈 것으로 보이며, 예산이 떨어지면 일찍 끝날 수 있습니다. 가입 후 카페·배달앱·자전거 계정을 연동해야 쌓입니다.</p>
+        <p style="margin:12px 0 0;font-size:.9rem"><b>에너지 분야</b>는 전기·수도·가스를 지난 1~2년 평균보다 덜 쓰면 현금이나 지역화폐로 줍니다. 서울은 이 제도 대신 <b>에코마일리지</b>를 씁니다.</p>
+        <div class="links">
+          <a href="https://cpoint.or.kr" target="_blank" rel="noopener">탄소중립포인트 누리집 (가입·연동)</a>
+          <a href="https://ecomileage.seoul.go.kr/home/" target="_blank" rel="noopener">서울 에코마일리지</a>
+        </div>
+      </section>
+
+      <section aria-labelledby="sTitle">
+        <h2 id="sTitle"><span>이번 주 자랑하기</span></h2>
+        <p class="share-text" id="shareText"></p>
+        <div class="row">
+          <button class="btn primary" id="copyShare" type="button">문구 복사</button>
+          <span class="note" style="margin:0">가족 단톡방이나 SNS에 붙여 넣어 같이 하자고 권해 보세요.</span>
+        </div>
+      </section>
+
+      <section aria-labelledby="bTitle">
+        <h2 id="bTitle"><span>기록 백업</span></h2>
+        <p style="margin:0 0 10px;font-size:.88rem;color:var(--muted)">기록은 이 브라우저에만 저장됩니다. 기기를 바꿀 때는 백업 문구를 복사해 두었다가 새 기기에 붙여 넣으세요.</p>
+        <textarea id="backup" aria-label="백업 데이터" spellcheck="false"></textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="copyBackup" type="button">백업 복사</button>
+          <button class="btn" id="restore" type="button">붙여 넣은 내용으로 복원</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <footer>탄소중립포인트 단가는 2026년 10월 SBS Biz 보도와 2025년 12월 헤럴드경제 보도 기준입니다. 실제 지급 조건은 누리집에서 확인하세요.</footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+const KEY='earth-habit-v1';
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,'0');
+const dkey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const today=new Date(); const TK=dkey(today);
+const fmt=n=>n.toLocaleString('ko-KR');
+const DOW=['일','월','화','수','목','금','토'];
+
+// 미션 목록: g = 1회 실천 시 줄어드는 탄소(gCO₂, 대략값)
+const MISSIONS=[
+ {t:'텀블러로 음료 받기',h:'일회용컵 하나를 줄입니다',g:30},
+ {t:'장바구니 챙겨 장보기',h:'비닐봉투 한 장 대신',g:40},
+ {t:'외출 전 멀티탭 끄기',h:'대기전력은 가정 전력의 약 6%',g:45},
+ {t:'샤워 시간 1분 줄이기',h:'물 약 12L와 데우는 에너지',g:90},
+ {t:'난방 온도 1℃ 낮추기',h:'겨울철 실내 20℃ 권장',g:200},
+ {t:'내복이나 카디건 입기',h:'체감 온도 2~3℃ 올라갑니다',g:150},
+ {t:'고기 없는 한 끼',h:'채식 한 끼로 바꾸기',g:800},
+ {t:'5km 이내는 걷거나 자전거',h:'승용차 5km 대신',g:1000},
+ {t:'대중교통으로 출퇴근',h:'자가용 대신 버스·지하철',g:1500},
+ {t:'엘리베이터 대신 계단 (3층 이하)',h:'',g:30},
+ {t:'남김없이 먹기',h:'음식물쓰레기 줄이기',g:200},
+ {t:'배달 시 일회용 수저 받지 않기',h:'주문 화면에서 체크',g:10},
+ {t:'배달 다회용기 선택',h:'포인트 1,000원 대상',g:60},
+ {t:'페트병 라벨 떼고 헹궈 버리기',h:'투명 페트병은 따로',g:20},
+ {t:'전자영수증 받기',h:'종이 영수증 대신',g:3},
+ {t:'빨래 모아서 한 번에',h:'세탁기 한 번 덜 돌리기',g:100},
+ {t:'찬물 세탁',h:'온수 데우는 에너지 절약',g:150},
+ {t:'안 쓰는 방 불 끄기',h:'',g:20},
+ {t:'냉장고 문 열기 전에 꺼낼 것 정하기',h:'',g:10},
+ {t:'손수건 쓰기',h:'휴지·핸드타월 대신',g:10},
+ {t:'물 받아서 설거지',h:'흐르는 물 대신',g:40},
+ {t:'양치컵 쓰기',h:'물 약 5L 절약',g:10},
+ {t:'개인 용기로 반찬·떡 포장',h:'포인트 대상',g:50},
+ {t:'중고거래로 사고팔기',h:'새 물건 하나 덜 만들기',g:500},
+ {t:'폐휴대폰 찾아서 반납하기',h:'포인트 2,000원',g:300},
+ {t:'계단·전철역까지 걷기 1만 보',h:'',g:200},
+ {t:'우유팩 씻어 말려 모으기',h:'주민센터에서 화장지로 교환',g:20},
+ {t:'컴퓨터 화면 밝기 낮추고 절전 모드',h:'',g:20},
+ {t:'가족에게 오늘 미션 하나 권하기',h:'함께 하면 오래 갑니다',g:30},
+ {t:'리필스테이션에서 세제 채우기',h:'포인트 대상',g:80}
+];
+const DEFAULT_HABITS=['텀블러 챙기기','장바구니 챙기기','멀티탭 끄기','5분 샤워','분리배출 제대로'];
+const PLASTIC_CHIPS=['컵','빨대','배달용기','생수병','비닐봉투'];
+// 습관 하나를 지킨 날의 추정 감축량
+const HABIT_G=25;
+const F={e:0.4781,g:2.176,w:0.237};
+
+function sampleRes(){
+  const r={}; const base=[[290,40,14],[305,22,14],[352,14,16],[380,12,17],[318,16,15],[287,46,14]];
+  // 작년 같은 달 하나 (감축률 예시)
+  for(let i=6;i>=1;i--){const d=new Date(today.getFullYear(),today.getMonth()-i,1);const b=base[6-i];r[d.getFullYear()+'-'+pad(d.getMonth()+1)]={e:b[0],g:b[1],w:b[2]}}
+  const ly=new Date(today.getFullYear()-1,today.getMonth()-1,1);r[ly.getFullYear()+'-'+pad(ly.getMonth()+1)]={e:330,g:58,w:15};
+  return r;
+}
+function fresh(){return{habits:DEFAULT_HABITS.map((n,i)=>({id:'h'+i,name:n})),hlog:{},mlog:{},roll:{},plastic:{},res:sampleRes(),sample:true}}
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){S=null}
+if(!S||!Array.isArray(S.habits))S=fresh();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+function hash(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+function todaysMissions(){
+  const seed=hash(TK+':'+(S.roll[TK]||0)); const idx=[]; let x=seed;
+  while(idx.length<3){x=Math.imul(x^(x>>>15),2246822519)>>>0; x=(x+0x9e3779b9)>>>0; const i=x%MISSIONS.length; if(!idx.includes(i))idx.push(i)}
+  return idx;
+}
+function dayCo2(k){
+  let g=0; const m=S.mlog[k]||[]; m.forEach(i=>{if(MISSIONS[i])g+=MISSIONS[i].g});
+  const h=S.hlog[k]||[]; g+=h.length*HABIT_G; return g;
+}
+function active(k){return (S.mlog[k]||[]).length>0||(S.hlog[k]||[]).length>0}
+function streak(){let n=0,d=new Date(today);if(!active(dkey(d)))d=addDays(d,-1);while(active(dkey(d))){n++;d=addDays(d,-1)}return n}
+function habitStreak(id){let n=0,d=new Date(today);if(!(S.hlog[dkey(d)]||[]).includes(id))d=addDays(d,-1);while((S.hlog[dkey(d)]||[]).includes(id)){n++;d=addDays(d,-1)}return n}
+function totalG(){const ks=new Set([...Object.keys(S.mlog),...Object.keys(S.hlog)]);let g=0;ks.forEach(k=>g+=dayCo2(k));return g}
+function level(g){const L=[[0,'새싹'],[5000,'떡잎'],[20000,'묘목'],[60000,'나무'],[150000,'숲'],[400000,'지구지킴이']];let n=L[0][1];L.forEach(([t,s])=>{if(g>=t)n=s});return n}
+
+function renderHeader(){
+  $('today').textContent=today.getFullYear()+'년 '+(today.getMonth()+1)+'월 '+today.getDate()+'일 '+DOW[today.getDay()]+'요일';
+  $('streak').innerHTML=streak()+'<small>일</small>';
+  $('todayCo2').innerHTML=fmt(dayCo2(TK))+'<small>g</small>';
+  const t=totalG(); $('totalCo2').innerHTML=(t/1000).toFixed(1)+'<small>kg</small>';
+  $('level').textContent=level(t);
+}
+function renderMissions(){
+  const ul=$('missions'); ul.innerHTML=''; const done=S.mlog[TK]||[];
+  todaysMissions().forEach((i,n)=>{
+    const m=MISSIONS[i]; const li=document.createElement('li'); const on=done.includes(i); if(on)li.className='done';
+    li.innerHTML='<input type="checkbox" class="check" id="m'+n+'" '+(on?'checked':'')+' aria-label="'+m.t+' 완료"><label for="m'+n+'"><div class="mt"></div><div class="mh"></div></label><span class="co2">−'+fmt(m.g)+'g</span>';
+    li.querySelector('.mt').textContent=m.t; li.querySelector('.mh').textContent=m.h;
+    li.querySelector('input').addEventListener('change',e=>{
+      const a=S.mlog[TK]||[]; if(e.target.checked){if(!a.includes(i))a.push(i)}else{a.splice(a.indexOf(i),1)}
+      S.mlog[TK]=a; save(); renderAll(); if(e.target.checked)toast(['좋아요! 지구가 고마워합니다','한 걸음 더 갔습니다','연속 기록이 이어집니다'][a.length%3]);
+    });
+    ul.appendChild(li);
+  });
+  const c=done.filter(i=>todaysMissions().includes(i)).length;
+  $('mQuote').textContent=c===0?'작은 실천 세 개면 오늘 하루 몫은 충분합니다.':c<3?'오늘 '+c+'개 했습니다. 하나만 더 해 볼까요?':'오늘 미션을 모두 마쳤습니다.';
+  $('mSub').textContent=c===3?'내일 아침에 새 미션이 나옵니다.':'하나만 해도 연속 기록이 이어집니다.';
+}
+function renderHabits(){
+  const t=$('habits'); const days=[]; for(let i=6;i>=0;i--)days.push(addDays(today,-i));
+  let h='<thead><tr><th style="text-align:left">습관</th>'+days.map(d=>'<th class="'+(dkey(d)===TK?'today':'')+'">'+DOW[d.getDay()]+'<br>'+d.getDate()+'</th>').join('')+'<th></th><th></th></tr></thead><tbody>';
+  S.habits.forEach(hb=>{
+    h+='<tr><td class="name"></td>'+days.map(d=>{const k=dkey(d);const on=(S.hlog[k]||[]).includes(hb.id);return '<td><button type="button" class="cell'+(on?' on':'')+(k===TK?' today':'')+'" data-h="'+hb.id+'" data-k="'+k+'" aria-pressed="'+on+'" aria-label="'+(d.getMonth()+1)+'월 '+d.getDate()+'일"></button></td>'}).join('')+'<td class="st">'+habitStreak(hb.id)+'일</td><td><button type="button" class="x" data-del="'+hb.id+'" aria-label="습관 삭제">×</button></td></tr>';
+  });
+  t.innerHTML=h+'</tbody>';
+  t.querySelectorAll('td.name').forEach((td,i)=>td.textContent=S.habits[i].name);
+  const n=(S.hlog[TK]||[]).length; $('hSum').textContent='오늘 '+n+' / '+S.habits.length;
+}
+$('habits').addEventListener('click',e=>{
+  const c=e.target.closest('.cell'); const del=e.target.closest('[data-del]');
+  if(c){const k=c.dataset.k,id=c.dataset.h;const a=S.hlog[k]||[];const i=a.indexOf(id);if(i>=0)a.splice(i,1);else a.push(id);S.hlog[k]=a;save();renderAll()}
+  if(del){const id=del.dataset.del; if(del.dataset.confirm!=='1'){del.dataset.confirm='1';del.textContent='삭제?';setTimeout(()=>{if(del.isConnected){del.dataset.confirm='';del.textContent='×'}},2500);return}
+    S.habits=S.habits.filter(h=>h.id!==id);save();renderAll()}
+});
+$('habitForm').addEventListener('submit',e=>{e.preventDefault();const v=$('habitInput').value.trim();if(!v)return;S.habits.push({id:'h'+Date.now().toString(36),name:v});$('habitInput').value='';save();renderAll()});
+$('reroll').addEventListener('click',()=>{S.roll[TK]=(S.roll[TK]||0)+1;save();renderMissions()});
+
+function renderPlastic(){
+  const n=S.plastic[TK]||0; $('pCount').textContent=n;
+  const days=[];for(let i=6;i>=0;i--)days.push(addDays(today,-i));
+  const vals=days.map(d=>S.plastic[dkey(d)]||0); const mx=Math.max(4,...vals);
+  $('pBars').innerHTML=days.map((d,i)=>'<div class="b'+(vals[i]===0?' zero':'')+(dkey(d)===TK?' today':'')+'"><span>'+vals[i]+'</span><i style="height:'+(vals[i]/mx*60)+'px"></i><span>'+DOW[d.getDay()]+'</span></div>').join('');
+  const sum=vals.reduce((a,b)=>a+b,0); const zero=vals.filter(v=>v===0).length;
+  $('pWeek').textContent='7일 '+sum+'개 · 0개인 날 '+zero+'일';
+}
+function setPlastic(d){S.plastic[TK]=Math.max(0,(S.plastic[TK]||0)+d);save();renderPlastic();renderShare()}
+$('pPlus').addEventListener('click',()=>setPlastic(1));
+$('pMinus').addEventListener('click',()=>setPlastic(-1));
+$('pChips').innerHTML=PLASTIC_CHIPS.map(c=>'<button type="button" class="chip">+ '+c+'</button>').join('');
+$('pChips').addEventListener('click',e=>{if(e.target.closest('.chip'))setPlastic(1)});
+
+function co2(r){return{e:(r.e||0)*F.e,g:(r.g||0)*F.g,w:(r.w||0)*F.w}}
+function tot(r){const c=co2(r);return c.e+c.g+c.w}
+function monthLabel(k){const[y,m]=k.split('-');return (+m)+'월'}
+function renderRes(){
+  $('sampleBanner').hidden=!S.sample;
+  const keys=Object.keys(S.res).sort(); const recent=keys.slice(-6);
+  const mx=Math.max(1,...recent.map(k=>tot(S.res[k])));
+  $('resBars').innerHTML=recent.map(k=>{const c=co2(S.res[k]);const sc=90/mx;return '<div class="m"><span class="val">'+Math.round(c.e+c.g+c.w)+'</span><div class="stack"><div class="seg-w" style="height:'+c.w*sc+'px"></div><div class="seg-g" style="height:'+c.g*sc+'px"></div><div class="seg-e" style="height:'+c.e*sc+'px"></div></div></div>'}).join('')||'<span class="note">아직 기록이 없습니다.</span>';
+  $('resX').innerHTML=recent.map(k=>'<span>'+monthLabel(k)+'</span>').join('');
+  let h='<thead><tr><th>월</th><th>전기</th><th>가스</th><th>수도</th><th>kgCO₂</th><th>작년 대비</th><th></th></tr></thead><tbody>';
+  recent.slice().reverse().forEach(k=>{const r=S.res[k];const[y,m]=k.split('-');const ly=(y-1)+'-'+m;const t=tot(r);let d='<span class="note" style="margin:0">–</span>';
+    if(S.res[ly]){const p=(t-tot(S.res[ly]))/tot(S.res[ly])*100;d='<span class="delta '+(p<=0?'down':'up')+'">'+(p>0?'+':'')+p.toFixed(1)+'%</span>'}
+    h+='<tr><td>'+y.slice(2)+'.'+m+'</td><td class="e">'+fmt(r.e||0)+'</td><td>'+fmt(r.g||0)+'</td><td class="w">'+fmt(r.w||0)+'</td><td>'+t.toFixed(0)+'</td><td>'+d+'</td><td><button type="button" class="x" data-rdel="'+k+'" aria-label="기록 삭제">×</button></td></tr>'});
+  $('resTable').innerHTML=h+'</tbody>';
+  // 판정: 가장 최근 달과 작년 같은 달
+  const v=$('verdict'); const last=keys[keys.length-1];
+  if(last){const[y,m]=last.split('-');const ly=(y-1)+'-'+m;
+    if(S.res[ly]){const p=(tot(S.res[last])-tot(S.res[ly]))/tot(S.res[ly])*100;v.hidden=false;v.className='verdict'+(p>-5?' bad':'');
+      v.innerHTML=(+m)+'월 배출은 작년 같은 달보다 <b>'+(p>0?'+':'')+p.toFixed(1)+'%</b>입니다. '+(p<=-5?'탄소중립포인트 에너지 분야는 보통 5% 이상 줄이면 포인트가 나옵니다. 이대로면 대상이 될 가능성이 큽니다.':'5% 이상 줄이면 탄소중립포인트 에너지 분야 포인트를 받을 수 있습니다. 난방 1℃ 낮추기부터 해 보세요.');}
+    else{v.hidden=false;v.className='verdict';v.innerHTML='작년 같은 달 고지서를 넣으면 감축률과 포인트 가능성을 알려 드립니다.'}
+  }else v.hidden=true;
+}
+$('resTable').addEventListener('click',e=>{const b=e.target.closest('[data-rdel]');if(!b)return;if(b.dataset.confirm!=='1'){b.dataset.confirm='1';b.textContent='삭제?';return}delete S.res[b.dataset.rdel];save();renderRes()});
+$('rMonth').value=today.getFullYear()+'-'+pad(today.getMonth()+1);
+$('resForm').addEventListener('submit',e=>{e.preventDefault();const k=$('rMonth').value;if(!k)return;
+  const num=id=>{const v=parseFloat($(id).value);return isNaN(v)?0:v};
+  const r={e:num('rElec'),g:num('rGas'),w:num('rWater')}; if(!r.e&&!r.g&&!r.w){toast('숫자를 하나 이상 넣어 주세요');return}
+  if(S.sample){S.res={};S.sample=false}
+  S.res[k]=r;save();renderRes();['rElec','rGas','rWater'].forEach(i=>$(i).value='');toast(monthLabel(k)+' 기록을 저장했습니다')});
+$('clearSample').addEventListener('click',()=>{S.res={};S.sample=false;save();renderRes()});
+
+function weekStats(){let m=0,h=0,g=0,p=0,zero=0;for(let i=0;i<7;i++){const k=dkey(addDays(today,-i));m+=(S.mlog[k]||[]).length;h+=(S.hlog[k]||[]).length;g+=dayCo2(k);const pv=S.plastic[k]||0;p+=pv;if(pv===0)zero++}return{m,h,g,p,zero}}
+function renderShare(){const w=weekStats();
+  $('shareText').textContent='🌏 이번 주 지구사랑 기록\n미션 '+w.m+'개 · 습관 '+w.h+'회 · 연속 '+streak()+'일\n아낀 탄소 약 '+(w.g/1000).toFixed(1)+'kg, 일회용 플라스틱 0개인 날 '+w.zero+'일\n같이 해요! 하루 미션 세 개면 충분합니다.'}
+async function copy(text,ok){try{await navigator.clipboard.writeText(text);toast(ok)}catch(e){toast('복사가 막혀 있습니다. 직접 선택해 복사해 주세요')}}
+$('copyShare').addEventListener('click',()=>copy($('shareText').textContent,'문구를 복사했습니다'));
+$('copyBackup').addEventListener('click',()=>{$('backup').value=JSON.stringify(S);$('backup').select();copy($('backup').value,'백업을 복사했습니다')});
+$('restore').addEventListener('click',()=>{try{const d=JSON.parse($('backup').value);if(!Array.isArray(d.habits))throw 0;S=Object.assign(fresh(),d);save();renderAll();toast('복원했습니다')}catch(e){toast('백업 형식이 아닙니다. 복사한 내용을 그대로 붙여 넣어 주세요')}});
+
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2200)}
+function renderAll(){renderHeader();renderMissions();renderHabits();renderPlastic();renderRes();renderShare()}
+renderAll();
+})();
+</script>
+</body>
+</html>

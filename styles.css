@@ -131,6 +131,11 @@ h1 {
 .card-link:focus-visible { outline: 2px solid var(--axis); outline-offset: 2px; }
 .card-go { display: inline-block; margin-top: 12px; color: var(--axis); font-weight: 600; font-size: 0.92rem; }
 .card-link:hover .card-go { color: var(--accent); }
+.qcard { display: flex; flex-direction: column; }
+.qcard .q { font-size: 0.88rem; color: var(--axis); margin: 0 0 10px; line-height: 1.55; }
+.qcard .card-links { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: auto; padding-top: 4px; }
+.card-go { text-decoration: none; }
+.card-go:hover { color: var(--accent); }
 
 dl {
   display: grid;

@@ -7,12 +7,15 @@
 - 방침: https://playax.kr/privacy.html
 - 연결 전 임시: https://msjycho.github.io/pax/
 
-## 웹앱
+## 생활의 질문 (웹앱)
 
 브라우저에서 바로 쓰는 단일 HTML 앱. 빌드 없이 파일 하나가 곧 앱이고, 기록은 각 브라우저의 localStorage에만 저장됩니다.
 
 - `web/routine/` — 지금 할 일 (시작 페이지): https://playax.kr/web/routine/
 - `web/claude-hub/` — Claude 활용 노트: https://playax.kr/web/claude-hub/
+- `web/reading/` — 책 펴는 시간: https://playax.kr/web/reading/
+- `web/earth-habit/` — 지구사랑 습관: https://playax.kr/web/earth-habit/
+- `web/earth-plan/` — 지구사랑 생활화 확산 방안 (제안서): https://playax.kr/web/earth-plan/
 
 ## 도메인 연결 상태 (2026-10-25)
 

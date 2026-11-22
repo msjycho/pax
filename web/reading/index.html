@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>책 펴는 시간</title>
+<meta name="description" content="아이와 함께 매일 책을 펴는 습관을 만드는 독서 기록 앱.">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@500;700&display=swap">
+<style>
+/* Layout: 가족 독서 습관 앱. 위는 아이 고르기·연속 기록, 탭 4개(오늘 / 독서 기록 / 우리집 약속 / 부모 가이드). 오늘은 2단(읽기·문해력 | 화면·보상), 폰에서는 한 줄. */
+:root{
+  --bg:#F1F3F6; --surface:#FFFFFF; --ink:#1A2230; --muted:#5B6678; --line:#DADFE7;
+  --accent:#2F5E8C; --accent-soft:#E2EBF4; --sun:#B7791F; --sun-soft:#F8EDD9;
+  --good:#2F7A55; --good-soft:#E0F0E7; --warn:#B0472B; --warn-soft:#F7E3DC;
+  --f-display:"Noto Serif KR","Nanum Myeongjo",Georgia,serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10141B; --surface:#181E28; --ink:#E4E9F0; --muted:#97A2B3; --line:#2A3240;
+  --accent:#86B4E3; --accent-soft:#1D2A3A; --sun:#E3B266; --sun-soft:#33281A;
+  --good:#7CCB9E; --good-soft:#1B2E24; --warn:#E59475; --warn-soft:#36221B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10141B; --surface:#181E28; --ink:#E4E9F0; --muted:#97A2B3; --line:#2A3240;
+  --accent:#86B4E3; --accent-soft:#1D2A3A; --sun:#E3B266; --sun-soft:#33281A;
+  --good:#7CCB9E; --good-soft:#1B2E24; --warn:#E59475; --warn-soft:#36221B; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding-block:26px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;margin-bottom:18px}
+.brand h1{font-family:var(--f-display);font-weight:700;font-size:clamp(1.6rem,3.6vw,2.2rem);line-height:1.2;margin:0}
+.brand p{margin:4px 0 0;color:var(--muted);font-size:.92rem}
+.kids{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.kid{font:inherit;font-size:.88rem;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.kid[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.kid small{opacity:.7;margin-left:4px}
+nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px;overflow-x:auto}
+nav.tabs a{padding:10px 14px;color:var(--muted);text-decoration:none;font-weight:500;font-size:.93rem;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+nav.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hero{background:var(--ink);color:var(--bg);border-radius:12px;padding:22px 22px 20px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px 28px;margin-bottom:20px}
+@media (max-width:760px){.hero{grid-template-columns:minmax(0,1fr)}}
+.hero .eyebrow{font-size:.76rem;letter-spacing:.08em;opacity:.65}
+.hero .big{font-family:var(--f-display);font-size:clamp(1.4rem,3vw,1.9rem);font-weight:700;line-height:1.3;margin:4px 0 8px;text-wrap:balance}
+.hero .sub{opacity:.75;font-size:.9rem;margin:0}
+.habit{display:flex;flex-direction:column;gap:8px;justify-content:center}
+.dots{display:grid;grid-template-columns:repeat(22,minmax(0,1fr));gap:3px}
+.dots i{aspect-ratio:1;border-radius:50%;background:color-mix(in srgb,var(--bg) 18%,transparent);max-width:100%}
+.dots i.on{background:var(--sun)}
+.habit .lbl{font-size:.82rem;opacity:.8;display:flex;justify-content:space-between;gap:8px;font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.col{display:flex;flex-direction:column;gap:20px;min-width:0}
+section.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;min-width:0}
+h2{font-size:.8rem;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+h2 .pill{letter-spacing:0}
+h3{font-family:var(--f-display);font-size:1.2rem;margin:0 0 6px;line-height:1.35;text-wrap:balance}
+.pill{display:inline-block;font-size:.74rem;font-weight:500;padding:2px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.pill.sun{background:var(--sun-soft);color:var(--sun)}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.btn{font:inherit;font-size:.9rem;font-weight:500;padding:9px 15px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.btn.small{padding:5px 10px;font-size:.8rem}
+.btn.ghost{background:transparent}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+input[type=text],input[type=number],select{font:inherit;font-size:.92rem;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-width:0}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted);min-width:0}
+.form{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:end}
+@media (max-width:480px){.form{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.form .wide{grid-column:1/-1}}
+.timer{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px;border-radius:10px;background:var(--accent-soft);margin-bottom:14px}
+.timer .clock{font-family:var(--f-mono);font-size:2.2rem;font-weight:500;font-variant-numeric:tabular-nums;line-height:1;color:var(--accent)}
+.meter{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:8px 0 4px}
+.meter i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .3s}
+.meter.over i{background:var(--warn)}
+.meter.ok i{background:var(--good)}
+.mini{font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.mini b{color:var(--ink);font-weight:600}
+ul.plain{list-style:none;margin:0;padding:0}
+ul.books li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+ul.books li:first-child{border-top:none}
+.t{font-family:var(--f-mono);font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 6px;border-radius:6px}
+.x:hover{color:var(--warn)}
+.act-steps{margin:8px 0 10px;padding-left:1.2em}
+.act-steps li{margin:3px 0}
+.why{font-size:.82rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px;margin-top:10px}
+.swaps{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.swap{font:inherit;text-align:left;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.swap .from{font-size:.76rem;color:var(--muted);text-decoration:line-through}
+.swap .to{font-size:.9rem;font-weight:500}
+.swap .m{font-family:var(--f-mono);font-size:.74rem;color:var(--accent)}
+.swap[aria-pressed="true"]{border-color:var(--good);background:var(--good-soft)}
+.swap[aria-pressed="true"] .m::after{content:" · 완료";color:var(--good)}
+.check{display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer}
+.check input{width:18px;height:18px;margin-top:3px;accent-color:var(--accent);flex:none}
+.stars{font-family:var(--f-mono);font-size:1.8rem;color:var(--sun);font-weight:500;font-variant-numeric:tabular-nums;line-height:1}
+ul.rewards li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+ul.rewards li:first-child{border-top:none}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;max-width:420px}
+.cal .d{aspect-ratio:1;border-radius:6px;background:var(--bg);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
+.cal .d.l1{background:color-mix(in srgb,var(--accent) 30%,var(--surface));color:var(--ink);border-color:transparent}
+.cal .d.l2{background:color-mix(in srgb,var(--accent) 60%,var(--surface));color:var(--surface);border-color:transparent}
+.cal .d.l3{background:var(--accent);color:var(--surface);border-color:transparent}
+.cal .d.today{outline:2px solid var(--sun);outline-offset:1px}
+.cal .h{font-size:.72rem;color:var(--muted);text-align:center}
+.legend{display:flex;gap:6px;align-items:center;font-size:.76rem;color:var(--muted);margin-top:8px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+@media (max-width:600px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.tile b{display:block;font-family:var(--f-mono);font-size:1.4rem;font-weight:500;font-variant-numeric:tabular-nums}
+.tile span{font-size:.78rem;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{text-align:left;padding:8px 6px;border-top:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:.78rem;border-top:none}
+.tablewrap{overflow-x:auto}
+.guide{display:flex;flex-direction:column;gap:20px}
+.guide article{max-width:72ch}
+.guide article p{margin:0 0 10px}
+.guide ul{margin:0 0 10px;padding-left:1.2em}
+.guide li{margin:4px 0}
+.cite{font-size:.78rem;color:var(--muted)}
+.cite a{color:var(--accent)}
+.agebox{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin:10px 0}
+.agebox div{padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
+.agebox div.me{border-color:var(--accent);background:var(--accent-soft)}
+.agebox b{display:block;font-size:.95rem}
+.agebox span{font-size:.84rem;color:var(--muted)}
+.banner{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:8px;background:var(--sun-soft);color:var(--ink);font-size:.88rem;margin-bottom:16px}
+.empty{color:var(--muted);font-size:.88rem;padding:6px 0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);padding:20px;max-width:min(420px,calc(100vw - 32px))}
+dialog::backdrop{background:color-mix(in srgb,var(--ink) 40%,transparent)}
+.foot{margin-top:28px;font-size:.78rem;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>책 펴는 시간</h1>
+      <p>화면은 조금 덜, 책은 조금 더. 아이와 부모가 함께 쓰는 하루 기록</p>
+    </div>
+    <div class="kids" id="kids"></div>
+  </header>
+
+  <nav class="tabs" aria-label="화면">
+    <a href="#today" data-v="today">오늘</a>
+    <a href="#log" data-v="log">독서 기록</a>
+    <a href="#promise" data-v="promise">우리집 약속</a>
+    <a href="#guide" data-v="guide">부모 가이드</a>
+  </nav>
+
+  <div id="sampleBanner" class="banner" hidden>
+    <span>지금 보이는 기록은 <b>예시</b>입니다. 우리 아이 이름을 넣고 새로 시작하세요.</span>
+    <span class="row"><button class="btn small primary" id="startFresh">예시 지우고 시작</button></span>
+  </div>
+
+  <!-- 오늘 -->
+  <main id="v-today" data-view>
+    <div class="hero">
+      <div>
+        <div class="eyebrow" id="heroDate"></div>
+        <div class="big" id="heroMsg"></div>
+        <p class="sub" id="heroSub"></p>
+      </div>
+      <div class="habit" aria-label="66일 습관 진행">
+        <div class="lbl"><span>습관이 자리 잡는 66일</span><span id="habitN"></span></div>
+        <div class="dots" id="dots"></div>
+        <div class="lbl"><span>책을 편 날마다 한 칸씩</span><span id="streakN"></span></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="col">
+        <section class="card">
+          <h2>오늘 읽기 <span class="pill" id="readGoalPill"></span></h2>
+          <div class="timer">
+            <div class="clock" id="tclock">00:00</div>
+            <div class="row">
+              <button class="btn primary" id="tstart">읽기 시작</button>
+              <button class="btn" id="tsave" disabled>기록하기</button>
+              <button class="btn ghost small" id="treset" disabled>지우기</button>
+            </div>
+          </div>
+          <div class="form">
+            <label class="f wide">책 제목<input type="text" id="bTitle" placeholder="예: 마당을 나온 암탉" autocomplete="off"></label>
+            <label class="f">분<input type="number" id="bMin" min="1" max="300" value="15"></label>
+            <label class="f">쪽수<input type="number" id="bPages" min="0" max="2000" placeholder="선택"></label>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <label class="check" style="padding:0"><input type="checkbox" id="bAloud"><span class="mini">부모와 함께 읽었어요 (소리 내어 읽기)</span></label>
+            <button class="btn primary" id="bAdd" style="margin-left:auto">책 기록 추가</button>
+          </div>
+          <div class="meter" id="readMeter"><i></i></div>
+          <div class="mini" id="readMini"></div>
+          <ul class="plain books" id="todayBooks" style="margin-top:8px"></ul>
+        </section>
+
+        <section class="card">
+          <h2>오늘의 문해력 5분 <span class="row"><span class="pill" id="litBand"></span><button class="btn small ghost" id="litNext">다른 활동</button></span></h2>
+          <h3 id="litTitle"></h3>
+          <ol class="act-steps" id="litSteps"></ol>
+          <div class="row"><button class="btn primary" id="litDone">했어요 (+1 별)</button></div>
+          <div class="why" id="litWhy"></div>
+        </section>
+        <section class="card">
+          <h2>잠들기 전</h2>
+          <label class="check"><input type="checkbox" id="bedOff"><span><b>잠들기 1시간 전 화면 끄기</b><br><span class="mini">폰·태블릿은 거실 충전소에. 지키면 별 1개</span></span></label>
+          <label class="check"><input type="checkbox" id="bedBook"><span><b>잠자리 책 한 권</b><br><span class="mini">짧아도 괜찮아요. 매일 같은 시간에 읽으면 습관이 빨리 붙어요</span></span></label>
+        </section>
+      </div>
+
+      <div class="col">
+        <section class="card">
+          <h2>오늘 화면 시간 <span class="pill" id="screenGoalPill"></span></h2>
+          <div class="row">
+            <button class="btn small" data-scr="-30">−30분</button>
+            <button class="btn small" data-scr="-10">−10분</button>
+            <span class="stars" style="color:var(--ink);font-size:1.6rem;min-width:5ch;text-align:center" id="scrVal">0분</span>
+            <button class="btn small" data-scr="10">+10분</button>
+            <button class="btn small" data-scr="30">+30분</button>
+          </div>
+          <div class="meter" id="scrMeter"><i></i></div>
+          <div class="mini" id="scrMini"></div>
+          <p class="mini" style="margin:8px 0 0">공부·숙제에 쓴 화면은 빼고, 영상·게임·SNS처럼 여가로 쓴 시간만 적어요.</p>
+        </section>
+
+        <section class="card">
+          <h2>화면 바꾸기 미션 <span class="pill good" id="swapSaved"></span></h2>
+          <div class="swaps" id="swaps"></div>
+          <p class="mini" style="margin:10px 0 0">하나 고를 때마다 별 1개. 하루 최대 3개까지 별이 쌓여요.</p>
+        </section>
+
+
+        <section class="card">
+          <h2>별과 보상 <button class="btn small ghost" id="editRewards">보상 바꾸기</button></h2>
+          <div class="row" style="justify-content:space-between;margin-bottom:6px">
+            <div><div class="stars" id="starN">0</div><div class="mini">모은 별</div></div>
+            <div class="mini" style="text-align:right">책 목표 달성 +2 · 조금 읽기 +1<br>문해력 +1 · 바꾸기 미션 +1 · 화면 끄기 +1</div>
+          </div>
+          <ul class="plain rewards" id="rewards"></ul>
+          <p class="mini" style="margin:10px 0 0">보상은 물건보다 책·경험으로. 장난감 같은 보상은 읽는 재미 자체를 줄일 수 있어요.</p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- 독서 기록 -->
+  <main id="v-log" data-view hidden>
+    <section class="card">
+      <h2>모아 보기</h2>
+      <div class="tiles">
+        <div class="tile"><b id="sDays">0</b><span>책 편 날</span></div>
+        <div class="tile"><b id="sMin">0</b><span>읽은 시간(분)</span></div>
+        <div class="tile"><b id="sBooks">0</b><span>기록한 책</span></div>
+        <div class="tile"><b id="sSaved">0</b><span>바꾼 화면 시간(분)</span></div>
+      </div>
+      <div class="grid">
+        <div>
+          <h2>최근 5주</h2>
+          <div class="cal" id="cal"></div>
+          <div class="legend">적게 <i style="background:var(--bg);border:1px solid var(--line)"></i><i style="background:color-mix(in srgb,var(--accent) 30%,var(--surface))"></i><i style="background:color-mix(in srgb,var(--accent) 60%,var(--surface))"></i><i style="background:var(--accent)"></i> 목표 이상</div>
+        </div>
+        <div style="min-width:0">
+          <h2>화면 시간 대 읽은 시간 (최근 7일)</h2>
+          <div id="week"></div>
+        </div>
+      </div>
+    </section>
+    <section class="card" style="margin-top:20px">
+      <h2>읽은 책 <span class="mini" id="bookCount"></span></h2>
+      <div class="tablewrap"><table><thead><tr><th>날짜</th><th>책</th><th>분</th><th>쪽</th><th>함께</th></tr></thead><tbody id="bookTable"></tbody></table></div>
+    </section>
+  </main>
+
+  <!-- 우리집 약속 -->
+  <main id="v-promise" data-view hidden>
+    <div class="grid">
+      <div class="col">
+        <section class="card">
+          <h2>나이별 권장 화면 시간</h2>
+          <p class="mini" style="margin:0">여가용 화면 기준입니다. 학교 과제나 영상통화는 따로 봐요.</p>
+          <div class="agebox" id="agebox"></div>
+          <p class="cite">WHO(2019) 5세 미만 지침, 미국소아과학회(AAP) 가족 미디어 계획, 캐나다 24시간 움직임 지침(5~17세)</p>
+        </section>
+        <section class="card">
+          <h2>우리 아이 설정</h2>
+          <div class="form" style="grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr)">
+            <label class="f">이름<input type="text" id="kName" autocomplete="off"></label>
+            <label class="f">나이(만)<input type="number" id="kAge" min="2" max="18"></label>
+            <label class="f">하루 화면 목표(분)<input type="number" id="kScreen" min="0" max="600" step="10"></label>
+            <label class="f">하루 읽기 목표(분)<input type="number" id="kRead" min="5" max="180" step="5"></label>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn primary" id="kSave">저장</button>
+            <button class="btn" id="kAdd">아이 추가</button>
+            <button class="btn ghost" id="kDel">이 아이 삭제</button>
+            <span class="mini" id="kDelMsg"></span>
+          </div>
+          <p class="mini" style="margin:10px 0 0">목표는 나이에 맞춰 자동으로 채워져요. 처음엔 지금보다 조금만 줄이는 목표가 오래 갑니다.</p>
+        </section>
+      </div>
+      <div class="col">
+        <section class="card">
+          <h2>가족 미디어 약속 <span class="pill" id="ruleN"></span></h2>
+          <p class="mini" style="margin:0 0 6px">온 가족이 함께 지키는 약속을 고르세요. 어른도 같이 지켜야 효과가 있어요.</p>
+          <div id="rules"></div>
+          <div class="row" style="margin-top:8px">
+            <input type="text" id="ruleNew" placeholder="우리집만의 약속 추가" style="flex:1 1 200px" autocomplete="off">
+            <button class="btn" id="ruleAdd">추가</button>
+          </div>
+        </section>
+        <section class="card">
+          <h2>실천 계획 한 문장</h2>
+          <p class="mini" style="margin:0 0 8px">"언제 ~하면, ~한다"로 정해두면 지킬 가능성이 커져요.</p>
+          <label class="f">언제<input type="text" id="planWhen" placeholder="예: 저녁 먹고 양치하면" autocomplete="off"></label>
+          <label class="f" style="margin-top:8px">무엇을<input type="text" id="planWhat" placeholder="예: 폰을 충전소에 두고 책 20분 읽는다" autocomplete="off"></label>
+          <p id="planOut" style="font-family:var(--f-display);font-size:1.1rem;margin:12px 0 0"></p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- 부모 가이드 -->
+  <main id="v-guide" data-view hidden>
+    <div class="guide">
+      <section class="card"><article>
+        <h3>스마트폰은 금지보다 '자리'를 정해 주세요</h3>
+        <p>2024년 과학기술정보통신부 스마트폰 과의존 실태조사에서 만 3~9세 유아동의 25.9%, 만 10~19세 청소년의 42.6%가 과의존 위험군이었습니다. 둘 다 전년보다 늘었습니다. 무조건 빼앗기보다 언제, 어디서 쓰는지 정하는 쪽이 오래 갑니다.</p>
+        <ul>
+          <li><b>화면 없는 장소와 시간</b>: 식탁, 침실, 숙제 책상, 잠들기 1시간 전. 충전은 거실 한 곳에서.</li>
+          <li><b>정해진 시간에 켜고, 함께 끄기</b>: 타이머를 아이가 직접 맞추게 하면 실랑이가 줄어요. 끝나기 5분 전에 미리 알려 주세요.</li>
+          <li><b>함께 보기</b>: 만 2~5세는 어른이 같이 보면서 이야기 나누는 것이 권장됩니다.</li>
+          <li><b>빈자리를 채우기</b>: 줄인 시간에 할 거리가 없으면 다시 화면으로 돌아가요. '화면 바꾸기 미션'이 이 역할을 합니다.</li>
+          <li><b>부모의 화면</b>: 아이는 부모가 폰을 보는 모습을 그대로 배웁니다. 약속은 가족 모두의 것으로.</li>
+          <li><b>수면 먼저</b>: 자기 전 화면은 잠드는 시간을 늦추고 수면을 줄인다는 연구가 많습니다.</li>
+        </ul>
+        <p class="cite">근거: <a href="https://www.newsis.com/view/NISX20250327_0003115394" target="_blank" rel="noopener">과기정통부 2024 스마트폰 과의존 실태조사 보도</a> · <a href="https://www.who.int/publications/i/item/9789241550536" target="_blank" rel="noopener">WHO 5세 미만 신체활동·좌식·수면 지침(2019)</a> · <a href="https://www.healthychildren.org/English/fmp/Pages/MediaPlan.aspx" target="_blank" rel="noopener">AAP Family Media Plan</a> · <a href="https://csepguidelines.ca/" target="_blank" rel="noopener">캐나다 24시간 움직임 지침</a> · <a href="https://doi.org/10.1016/j.smrv.2014.07.007" target="_blank" rel="noopener">Hale &amp; Guan(2015) 화면 시간과 수면</a></p>
+      </article></section>
+
+      <section class="card"><article>
+        <h3>책 읽는 습관은 '매일 같은 때, 작게'</h3>
+        <p>습관은 같은 상황에서 같은 행동을 반복할 때 자동이 됩니다. 한 연구에서 새 습관이 자리 잡는 데 걸린 기간은 평균 66일이었고, 사람마다 18일에서 254일까지 차이가 컸습니다. 하루 빠져도 습관 형성에 큰 영향은 없었습니다.</p>
+        <ul>
+          <li><b>신호에 붙이기</b>: "양치하고 나면 책 한 권"처럼 이미 하는 일 뒤에 붙이세요. '실천 계획 한 문장'에 적어 두면 지킬 확률이 높아집니다.</li>
+          <li><b>기준은 낮게</b>: 처음엔 5~10분, 그림책 한 권이면 충분합니다. 연속 기록은 "책을 편 날"로 셉니다.</li>
+          <li><b>고를 권리</b>: 아이가 스스로 고른 책을 더 오래 읽습니다. 만화, 도감, 잡지도 읽기입니다.</li>
+          <li><b>소리 내어 읽어 주기</b>: 글을 혼자 읽는 아이에게도 계속 읽어 주세요. 듣기 이해력은 읽기 이해력보다 몇 년 앞서 있어서, 혼자는 못 읽을 좋은 이야기를 함께 즐길 수 있어요.</li>
+          <li><b>대화하며 읽기(대화식 읽기)</b>: 읽어 주다 멈추고 묻고, 아이 대답을 받아 넓혀 주고, 다시 말해 보게 합니다. 어휘와 표현력이 자란다는 실험 결과가 있습니다.</li>
+          <li><b>보상은 책으로</b>: 물건 보상은 읽는 즐거움을 줄일 수 있습니다. 별로 바꾸는 보상은 서점에서 책 고르기, 도서관 나들이, 읽어 주기 시간 늘리기처럼 읽기와 이어진 것으로 고르세요.</li>
+          <li><b>책이 보이는 집</b>: 소파 옆, 식탁 옆, 차 안에 책 바구니를. 손 닿는 곳의 책이 폰을 대신합니다.</li>
+        </ul>
+        <p class="cite">근거: <a href="https://doi.org/10.1002/ejsp.674" target="_blank" rel="noopener">Lally 외(2010) 습관 형성 기간</a> · <a href="https://doi.org/10.1037/0003-066X.54.7.493" target="_blank" rel="noopener">Gollwitzer(1999) 실행 의도</a> · <a href="https://doi.org/10.1037/0012-1649.24.4.552" target="_blank" rel="noopener">Whitehurst 외(1988) 대화식 읽기</a> · <a href="https://doi.org/10.1037/0033-2909.125.6.627" target="_blank" rel="noopener">Deci 외(1999) 보상과 내적 동기</a> · <a href="https://doi.org/10.1080/19388070701749546" target="_blank" rel="noopener">Marinak &amp; Gambrell(2008) 책 보상과 읽기 동기</a></p>
+      </article></section>
+
+      <section class="card"><article>
+        <h3>문해력은 읽고 나서 '말하고 쓰기'로 자랍니다</h3>
+        <p>문해력은 글자를 읽는 힘을 넘어 뜻을 이해하고, 따져 보고, 자기 말로 다시 표현하는 힘입니다. 효과가 확인된 이해 전략은 몇 가지로 모입니다. '오늘의 문해력 5분'은 이 전략을 하루 하나씩 돌아가며 연습하게 짜여 있어요.</p>
+        <ul>
+          <li><b>요약하기</b>: 처음, 가운데, 끝을 한 문장씩.</li>
+          <li><b>질문 만들기</b>: 답이 책에 있는 질문과, 생각해야 답할 수 있는 질문을 함께.</li>
+          <li><b>예측하고 확인하기</b>: 표지와 제목으로 내용을 짐작하고 읽은 뒤 맞춰 보기.</li>
+          <li><b>모르는 낱말 짐작하기</b>: 앞뒤 문장으로 뜻을 추측한 뒤 사전으로 확인. 어휘는 문맥 속에서 가장 잘 남습니다.</li>
+          <li><b>소리 내어 반복 읽기</b>: 같은 글을 두세 번 읽으면 읽기 속도와 정확도, 즉 유창성이 오릅니다.</li>
+          <li><b>깊이 읽을 글은 종이로</b>: 정보 글을 읽을 때는 화면보다 종이가 이해에 조금 더 유리하다는 메타분석이 있습니다. 시간에 쫓길수록 차이가 커졌습니다.</li>
+        </ul>
+        <p class="cite">근거: <a href="https://www.nichd.nih.gov/publications/pubs/nrp/smallbook" target="_blank" rel="noopener">미국 국가읽기위원회(NRP, 2000)</a> · <a href="https://doi.org/10.1207/s1532690xci0102_1" target="_blank" rel="noopener">Palincsar &amp; Brown(1984) 상보적 교수</a> · <a href="https://doi.org/10.1016/j.edurev.2018.09.003" target="_blank" rel="noopener">Delgado 외(2018) 종이 대 화면 읽기 메타분석</a></p>
+      </article></section>
+
+      <section class="card"><article>
+        <h3>학습력은 '다시 떠올리기'와 '나눠 하기'</h3>
+        <p>같은 공부 시간이라도 방법에 따라 남는 양이 크게 다릅니다. 다시 읽기보다 효과가 큰 두 가지가 있습니다.</p>
+        <ul>
+          <li><b>인출 연습</b>: 책을 덮고 기억나는 것을 말하거나 써 보기. 한 실험에서 일주일 뒤 기억이 다시 읽은 집단보다 훨씬 많이 남았습니다. '덮고 떠올리기' 활동이 이것입니다.</li>
+          <li><b>분산 학습</b>: 한 번에 몰아서보다 며칠에 나눠 짧게. 매일 20분 읽기가 주말 2시간보다 낫습니다.</li>
+          <li><b>집중 환경</b>: 공부할 때 폰은 다른 방에. 눈에 보이기만 해도 주의가 흩어질 수 있습니다.</li>
+          <li><b>잠</b>: 배운 것은 자는 동안 정리됩니다. 화면 끄기 약속이 곧 공부 약속입니다.</li>
+          <li><b>과정 칭찬</b>: "똑똑하네"보다 "끝까지 읽었구나", "어려운 낱말을 찾아봤네"처럼 한 일을 짚어 칭찬하세요.</li>
+        </ul>
+        <p class="cite">근거: <a href="https://doi.org/10.1111/j.1467-9280.2006.01693.x" target="_blank" rel="noopener">Roediger &amp; Karpicke(2006) 인출 연습</a> · <a href="https://doi.org/10.1037/0033-2909.132.3.354" target="_blank" rel="noopener">Cepeda 외(2006) 분산 학습 메타분석</a></p>
+      </article></section>
+    </div>
+  </main>
+
+  <p class="foot">기록은 이 기기의 브라우저에만 저장됩니다. 의학적 진단이나 상담을 대신하지 않습니다. 화면 사용 문제로 걱정되면 스마트쉼센터(국번 없이 1599-0075) 상담을 받을 수 있어요.</p>
+</div>
+
+<dialog id="rwDlg">
+  <h3>보상 바꾸기</h3>
+  <p class="mini" style="margin:0 0 10px">한 줄에 하나씩, "보상 이름 / 별 개수" 형식으로 적어요.</p>
+  <textarea id="rwText" rows="7" style="width:100%;font:inherit;font-size:.9rem;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)"></textarea>
+  <div class="row" style="justify-content:flex-end;margin-top:12px">
+    <button class="btn ghost" id="rwCancel">취소</button>
+    <button class="btn primary" id="rwSave">저장</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+const KEY='reading-habit-v1';
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,'0');
+const dkey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+
+function defaults(age){
+  age=+age||8;
+  if(age<=5) return {screen:60,read:15};
+  if(age<=8) return {screen:90,read:20};
+  if(age<=12) return {screen:120,read:25};
+  return {screen:120,read:30};
+}
+function band(age){return age<=6?'young':'old'}
+
+const AGE_GUIDE=[
+  {min:0,max:1,t:'만 2세 미만',d:'영상통화 외 화면은 권장하지 않아요 (WHO·AAP).'},
+  {min:2,max:5,t:'만 2~5세',d:'하루 1시간 이내, 좋은 내용으로, 어른과 함께 보기 (WHO·AAP).'},
+  {min:6,max:12,t:'만 6~12세',d:'여가 화면 하루 2시간 이내 (캐나다 지침). 잠·운동·책 시간을 먼저 지켜요 (AAP).'},
+  {min:13,max:18,t:'만 13~18세',d:'여가 화면 하루 2시간 이내. 스스로 규칙을 정하게 하고 함께 점검해요.'}
+];
+
+const SWAPS=[
+  {f:'유튜브 영상',t:'그림책·만화책 한 권',m:15},
+  {f:'게임',t:'보드게임 한 판',m:30},
+  {f:'쇼츠',t:'도서관·서점 나들이',m:60},
+  {f:'태블릿',t:'바깥 놀이·자전거',m:30},
+  {f:'영상',t:'오디오북 듣기',m:20},
+  {f:'식탁 위 폰',t:'폰 바구니에, 오늘 있었던 일 이야기',m:20},
+  {f:'이동 중 폰',t:'끝말잇기·스무고개',m:15},
+  {f:'숙제 옆 폰',t:'폰은 다른 방에 두고 숙제',m:30},
+  {f:'잠자리 폰',t:'읽어 주기 시간',m:20},
+  {f:'만화 영상',t:'그리기·만들기',m:30},
+  {f:'요리 영상',t:'함께 요리하고 레시피 읽기',m:30},
+  {f:'주말 아침 화면',t:'화면 없는 오전',m:60}
+];
+
+const RULES=[
+  {id:'meal',t:'식탁에는 화면 없이'},
+  {id:'room',t:'침실에 폰·태블릿 두지 않기, 충전은 거실에서'},
+  {id:'bed',t:'잠들기 1시간 전 모든 화면 끄기'},
+  {id:'hw',t:'숙제할 때 폰은 다른 방에'},
+  {id:'time',t:'영상·게임은 정한 시간에, 끝나면 함께 끄기'},
+  {id:'co',t:'혼자 보기보다 함께 보고 이야기하기'},
+  {id:'parent',t:'부모도 아이 앞에서 폰 덜 쓰기'},
+  {id:'app',t:'새 앱·게임은 부모와 먼저 살펴보기'},
+  {id:'weekend',t:'주말에 화면 없는 가족 시간 한 번'}
+];
+
+const ACTS=[
+  {t:'세 줄 요약',y:['오늘 읽은 이야기를 떠올려요.','처음에 무슨 일이 있었는지 말해요.','가운데에 무슨 일이 있었는지 말해요.','끝은 어떻게 됐는지 말해요.'],o:['읽은 부분의 처음, 가운데, 끝을 한 문장씩 써요.','세 문장을 이어 소리 내어 읽어 봐요.','빠진 중요한 내용이 없는지 부모와 확인해요.'],w:'요약하기는 이해력을 높이는 효과가 확인된 대표 전략이에요 (NRP 2000).'},
+  {t:'낱말 탐정',y:['책에서 처음 듣는 낱말 2개를 찾아요.','그림과 앞뒤 이야기를 보고 뜻을 짐작해요.','부모가 뜻을 알려 주면, 그 낱말로 문장을 하나 만들어요.'],o:['모르는 낱말 3개를 찾아 적어요.','앞뒤 문장만 보고 뜻을 먼저 짐작해 써요.','사전으로 확인하고, 그 낱말로 내 문장을 하나씩 만들어요.'],w:'어휘는 문맥 속에서 짐작하고 직접 써 볼 때 가장 오래 남아요.'},
+  {t:'질문 두 개 만들기',y:['"왜?"로 시작하는 질문 하나를 만들어요.','"만약에?"로 시작하는 질문 하나를 만들어요.','부모와 서로 질문하고 대답해요.'],o:['답이 책에 바로 있는 질문 하나를 써요.','생각해야 답할 수 있는 질문(왜, 어떻게, 만약) 하나를 써요.','부모에게 묻고, 부모 답에 내 생각을 덧붙여요.'],w:'스스로 질문을 만드는 것은 상보적 교수의 핵심 단계예요 (Palincsar & Brown 1984).'},
+  {t:'다음 장면 맞히기',y:['표지 그림과 제목을 봐요.','"무슨 이야기일까?" 하고 말해 봐요.','다 읽고 내 짐작과 같았는지 이야기해요.'],o:['읽기 전에 제목과 차례를 보고 내용을 한 문장으로 예측해요.','중간에 한 번 멈추고 "다음엔 이렇게 될 것 같다"를 적어요.','다 읽고 맞은 점과 달랐던 점을 비교해요.'],w:'예측하고 확인하는 읽기는 집중력과 이해를 함께 키워요.'},
+  {t:'주인공 인터뷰',y:['부모는 기자, 아이는 주인공이 돼요.','기자가 "그때 기분이 어땠어요?"라고 물어요.','주인공이 되어 대답해요.'],o:['주인공에게 묻고 싶은 질문 3개를 써요.','부모가 질문하면 주인공이 되어 답해요.','주인공의 선택에 동의하는지 내 생각을 한 문장으로 써요.'],w:'인물의 마음을 추론하는 활동은 행간을 읽는 힘을 길러요.'},
+  {t:'덮고 떠올리기',y:['책을 덮어요.','기억나는 것을 모두 말해요. 작은 것도 좋아요.','책을 다시 펴서 빠뜨린 것을 찾아봐요.'],o:['책을 덮고 2분 동안 기억나는 내용을 모두 써요.','책을 펴서 빠진 내용을 다른 색으로 채워요.','내일 다시 한 번 덮고 떠올려 봐요.'],w:'다시 읽기보다 떠올려 보기가 기억을 훨씬 오래 남겨요 (Roediger & Karpicke 2006).'},
+  {t:'같은 쪽 두 번 읽기',y:['좋아하는 한 쪽을 부모가 먼저 읽어 줘요.','아이가 따라 읽어요.','한 번 더 읽으면서 목소리 연기를 해 봐요.'],o:['한 쪽을 소리 내어 읽으며 1분을 재요.','한 번 더 읽고 다시 재요.','더 매끄러워진 부분을 부모와 이야기해요.'],w:'반복해서 소리 내어 읽으면 읽기 유창성이 올라가요 (NRP 2000).'},
+  {t:'제목 바꾸기',y:['이 책에 새 이름을 붙여 줘요.','왜 그 이름인지 말해요.'],o:['이 글에 어울리는 새 제목을 두 개 지어요.','더 좋은 제목 하나를 골라 이유를 써요.'],w:'제목을 짓는 것은 글의 중심 생각을 찾는 연습이에요.'},
+  {t:'내 이야기와 잇기',y:['주인공처럼 해 본 적이 있는지 이야기해요.','그때 어떻게 했는지 말해요.'],o:['책 속 사건과 비슷한 내 경험을 떠올려 써요.','같은 점과 다른 점을 하나씩 적어요.'],w:'읽은 내용을 경험과 이으면 이해가 깊어지고 오래 기억돼요.'},
+  {t:'오늘의 한 문장',y:['가장 마음에 드는 문장을 골라요.','부모가 써 주면 따라 써 봐요.','왜 좋았는지 말해요.'],o:['마음에 드는 문장 하나를 그대로 옮겨 써요.','그 문장이 좋은 이유를 두 문장으로 써요.'],w:'좋은 문장을 따라 쓰면 문장 구조와 표현이 자연스럽게 익어요.'},
+  {t:'원인과 결과 사슬',y:['"왜 이렇게 됐을까?"를 물어요.','"그래서 어떻게 됐지?"를 이어서 물어요.'],o:['이야기 속 중요한 사건 하나를 골라요.','그 사건의 원인과 결과를 화살표로 이어 그려요.','원인이 달랐다면 어떻게 됐을지 써요.'],w:'원인과 결과를 따지는 것은 설명문과 교과서를 읽는 기본 힘이에요.'},
+  {t:'사실과 의견 가르기',y:['그림을 보며 "진짜 있는 일"과 "생각"을 나눠 말해요.'],o:['짧은 기사나 설명글 하나를 읽어요.','사실 문장 2개, 의견 문장 2개를 찾아 표시해요.','의견에 동의하는지 근거와 함께 말해요.'],w:'사실과 의견을 구분하는 힘은 디지털 정보를 가려 읽는 데 꼭 필요해요.'},
+  {t:'그림 지도 만들기',y:['이야기에 나온 장소를 그림으로 그려요.','주인공이 어디서 어디로 갔는지 손가락으로 따라가요.'],o:['설명글의 핵심 낱말을 가운데에 쓰고 가지를 그려요.','가지마다 중요한 내용을 짧게 적어요.','지도만 보고 내용을 설명해 봐요.'],w:'내용을 그림으로 정리하면 구조가 보이고 기억이 쉬워져요.'},
+  {t:'함께 읽기 질문 놀이',y:['부모가 5분 읽어 줘요.','멈출 때마다 "이건 뭐지?", "다음엔?", "너라면?"을 물어요.','아이 대답을 받아 한 마디 더 넓혀 줘요.'],o:['부모와 한 쪽씩 번갈아 읽어요.','쪽이 끝날 때마다 서로 질문 하나씩.','가장 좋은 질문을 뽑아요.'],w:'대화하며 읽기는 어휘와 표현력을 키운다는 실험 결과가 있어요 (Whitehurst 1988).'}
+];
+
+const DEFAULT_REWARDS=[
+  {n:'서점에서 책 한 권 고르기',c:15},
+  {n:'도서관 나들이',c:8},
+  {n:'잠자리 읽어 주기 한 권 더',c:3},
+  {n:'주말 가족 보드게임 선택권',c:6},
+  {n:'공원 소풍 장소 정하기',c:10}
+];
+
+let S=null;
+function load(){try{S=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){S=null}if(!S||!S.kids||!S.kids.length)S=sample()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+function sample(){
+  const id=uid();const d=defaults(8);
+  const s={v:1,sample:true,cur:id,kids:[{id,name:'예시 아이',age:8,screenGoal:d.screen,readGoal:d.read}],days:{},spent:{},rewards:DEFAULT_REWARDS.slice(),rules:{meal:true,room:true,bed:true},custom:[],plan:{when:'저녁 먹고 양치하면',what:'폰을 충전소에 두고 책 20분 읽는다'},litSkip:0};
+  const books=['마당을 나온 암탉','만복이네 떡집','어린이를 위한 우주 도감','구름빵','엄마 까투리','긴긴밤','수학 탐험대'];
+  const days={};const today=new Date();
+  for(let i=1;i<=12;i++){
+    if(i===5||i===9)continue;
+    const k=dkey(addDays(today,-i));
+    days[k]={read:[{id:uid(),title:books[i%books.length],min:10+((i*7)%20),pages:8+((i*5)%15),aloud:i%3===0}],screen:60+((i*23)%80),swaps:i%2?[i%SWAPS.length]:[],lit:i%3!==1,bed:i%4!==0,bedBook:i%2===0};
+  }
+  s.days[id]=days;return s;
+}
+
+const kid=()=>S.kids.find(k=>k.id===S.cur)||S.kids[0];
+const today=()=>dkey(new Date());
+function day(k,dk){S.days[k.id]=S.days[k.id]||{};return S.days[k.id][dk]||{read:[],screen:0,swaps:[],lit:false,bed:false,bedBook:false}}
+function setDay(k,dk,d){S.days[k.id]=S.days[k.id]||{};S.days[k.id][dk]=d;save()}
+const readMin=d=>(d.read||[]).reduce((a,b)=>a+(+b.min||0),0);
+function earned(k,d){const m=readMin(d);return (m>=k.readGoal?2:m>0?1:0)+(d.lit?1:0)+Math.min((d.swaps||[]).length,3)+(d.bed?1:0)}
+function totalStars(k){const days=S.days[k.id]||{};let e=0;for(const dk in days)e+=earned(k,days[dk]);const sp=(S.spent[k.id]||[]).reduce((a,b)=>a+b.c,0);return e-sp}
+function readDay(d){return readMin(d)>0||d.bedBook}
+function streak(k){let n=0;let dt=new Date();const days=S.days[k.id]||{};if(!readDay(days[dkey(dt)]||{}))dt=addDays(dt,-1);while(readDay(days[dkey(dt)]||{})){n++;dt=addDays(dt,-1)}return n}
+function readDays(k){const days=S.days[k.id]||{};return Object.keys(days).filter(dk=>readDay(days[dk])).length}
+
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1800)}
+
+/* views */
+const VIEWS=['today','log','promise','guide'];
+function route(){const v=VIEWS.includes(location.hash.slice(1))?location.hash.slice(1):'today';document.querySelectorAll('[data-view]').forEach(m=>m.hidden=m.id!=='v-'+v);document.querySelectorAll('nav.tabs a').forEach(a=>a.setAttribute('aria-current',a.dataset.v===v?'page':'false'));render()}
+window.addEventListener('hashchange',route);
+
+function renderKids(){
+  $('kids').innerHTML=S.kids.map(k=>`<button class="kid" data-k="${k.id}" aria-pressed="${k.id===kid().id}">${esc(k.name)}<small>${k.age}세</small></button>`).join('');
+  $('kids').querySelectorAll('.kid').forEach(b=>b.onclick=()=>{S.cur=b.dataset.k;save();render()});
+  $('sampleBanner').hidden=!S.sample;
+}
+
+function renderToday(){
+  const k=kid(),dk=today(),d=day(k,dk);const m=readMin(d);const st=streak(k);const rd=readDays(k);
+  const now=new Date();
+  $('heroDate').textContent=now.toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'long'});
+  let msg,sub;
+  if(m>=k.readGoal){msg=`${esc(k.name)}, 오늘 읽기 목표 달성!`;sub=`${m}분 읽었어요. 잠자리 책 한 권으로 하루를 마무리해요.`}
+  else if(m>0){msg=`${k.readGoal-m}분만 더 읽으면 오늘 목표예요`;sub=`지금까지 ${m}분. 타이머를 켜고 이어 읽어요.`}
+  else if(st>0){msg=`${st}일째 이어 온 책 습관, 오늘도 한 쪽만`;sub='5분이라도 펴면 연속 기록이 이어져요.'}
+  else{msg='오늘은 어떤 책을 펼까요?';sub=`하루 ${k.readGoal}분이 목표예요. 짧은 그림책 한 권도 좋아요.`}
+  $('heroMsg').innerHTML=msg;$('heroSub').textContent=sub;
+  $('dots').innerHTML=Array.from({length:66},(_,i)=>`<i class="${i<Math.min(rd,66)?'on':''}"></i>`).join('');
+  $('habitN').textContent=`${Math.min(rd,66)} / 66일`;
+  $('streakN').textContent=`연속 ${st}일`;
+
+  $('readGoalPill').textContent=`목표 ${k.readGoal}분`;
+  const rm=$('readMeter');rm.className='meter'+(m>=k.readGoal?' ok':'');rm.firstElementChild.style.width=Math.min(100,m/k.readGoal*100)+'%';
+  $('readMini').innerHTML=`<b>${m}분</b> / ${k.readGoal}분 · 책 ${d.read.length}권`;
+  $('todayBooks').innerHTML=d.read.length?d.read.map(b=>`<li><span>${esc(b.title)}${b.aloud?' <span class="pill sun">함께</span>':''}</span><span class="t">${b.min}분${b.pages?' · '+b.pages+'쪽':''}</span><button class="x" data-del="${b.id}" aria-label="${esc(b.title)} 기록 지우기">×</button></li>`).join(''):'<li><span class="empty">아직 기록이 없어요. 타이머로 읽거나 직접 적어 보세요.</span></li>';
+  $('todayBooks').querySelectorAll('[data-del]').forEach(x=>x.onclick=()=>{const dd=day(k,dk);dd.read=dd.read.filter(b=>b.id!==x.dataset.del);setDay(k,dk,dd);render()});
+
+  // literacy
+  const doy=Math.floor((new Date(now.getFullYear(),now.getMonth(),now.getDate())-new Date(now.getFullYear(),0,0))/864e5);
+  const a=ACTS[(doy+(S.litSkip||0))%ACTS.length];const b=band(k.age);
+  $('litBand').textContent=b==='young'?'말로 하는 활동':'쓰는 활동';
+  $('litTitle').textContent=a.t;
+  $('litSteps').innerHTML=a[b==='young'?'y':'o'].map(s=>`<li>${esc(s)}</li>`).join('');
+  $('litWhy').textContent='왜 효과가 있나요? '+a.w;
+  $('litDone').textContent=d.lit?'오늘 활동 완료':'했어요 (+1 별)';$('litDone').disabled=!!d.lit;
+
+  // screen
+  const sc=d.screen||0;$('scrVal').textContent=sc+'분';
+  $('screenGoalPill').textContent=`목표 ${k.screenGoal}분 이내`;
+  const sm=$('scrMeter');const over=sc>k.screenGoal;sm.className='meter'+(over?' over':' ok');sm.firstElementChild.style.width=(k.screenGoal?Math.min(100,sc/k.screenGoal*100):sc?100:0)+'%';
+  $('scrMini').innerHTML=over?`목표보다 <b>${sc-k.screenGoal}분</b> 더 썼어요. 내일은 바꾸기 미션 하나 먼저 해 봐요.`:`목표까지 <b>${k.screenGoal-sc}분</b> 남았어요.`;
+
+  // swaps
+  const saved=(d.swaps||[]).reduce((a,i)=>a+SWAPS[i].m,0);
+  $('swapSaved').textContent=saved?`오늘 ${saved}분 바꿈`:'오늘 0분 바꿈';
+  $('swaps').innerHTML=SWAPS.map((s,i)=>`<button class="swap" data-sw="${i}" aria-pressed="${(d.swaps||[]).includes(i)}"><span class="from">${esc(s.f)}</span><span class="to">${esc(s.t)}</span><span class="m">약 ${s.m}분</span></button>`).join('');
+  $('swaps').querySelectorAll('.swap').forEach(btn=>btn.onclick=()=>{const dd=day(k,dk);const i=+btn.dataset.sw;dd.swaps=dd.swaps||[];if(dd.swaps.includes(i))dd.swaps=dd.swaps.filter(x=>x!==i);else{dd.swaps.push(i);toast(dd.swaps.length<=3?'좋아요! 별 1개':'잘했어요! (별은 하루 3개까지)')}setDay(k,dk,dd);render()});
+
+  $('bedOff').checked=!!d.bed;$('bedBook').checked=!!d.bedBook;
+
+  // rewards
+  const stars=totalStars(k);$('starN').textContent=stars;
+  $('rewards').innerHTML=S.rewards.map((r,i)=>`<li><span>${esc(r.n)} <span class="pill sun">별 ${r.c}</span></span><button class="btn small" data-rw="${i}" ${stars<r.c?'disabled':''}>바꾸기</button></li>`).join('');
+  $('rewards').querySelectorAll('[data-rw]').forEach(b=>b.onclick=()=>{const r=S.rewards[+b.dataset.rw];S.spent[k.id]=S.spent[k.id]||[];S.spent[k.id].push({n:r.n,c:r.c,date:dk});save();toast(`"${r.n}" 보상을 받았어요`);render()});
+}
+
+function renderLog(){
+  const k=kid();const days=S.days[k.id]||{};
+  let tm=0,tb=0,ts=0;const rows=[];
+  Object.keys(days).sort().reverse().forEach(dk=>{const d=days[dk];tm+=readMin(d);tb+=(d.read||[]).length;ts+=(d.swaps||[]).reduce((a,i)=>a+SWAPS[i].m,0);(d.read||[]).forEach(b=>rows.push([dk,b]))});
+  $('sDays').textContent=readDays(k);$('sMin').textContent=tm;$('sBooks').textContent=tb;$('sSaved').textContent=ts;
+  // calendar: 5 weeks ending this week
+  const now=new Date();const start=addDays(now,-(now.getDay())-28);
+  let h=['일','월','화','수','목','금','토'].map(x=>`<div class="h">${x}</div>`).join('');
+  for(let i=0;i<35;i++){const dt=addDays(start,i);const dk=dkey(dt);const d=days[dk]||{};const m=readMin(d);const future=dt>now&&dk!==today();
+    const lv=future?'':m>=k.readGoal?'l3':m>=k.readGoal/2?'l2':(m>0||d.bedBook)?'l1':'';
+    h+=`<div class="d ${lv} ${dk===today()?'today':''}" title="${dk} · ${m}분" style="${future?'opacity:.35':''}">${dt.getDate()}</div>`}
+  $('cal').innerHTML=h;
+  // week bars
+  let w='<table><thead><tr><th>날짜</th><th>읽기</th><th>화면</th></tr></thead><tbody>';
+  const mx=Math.max(k.screenGoal,k.readGoal,1,...Array.from({length:7},(_,i)=>{const d=days[dkey(addDays(now,-i))]||{};return Math.max(readMin(d),d.screen||0)}));
+  for(let i=6;i>=0;i--){const dt=addDays(now,-i);const d=days[dkey(dt)]||{};const r=readMin(d),s=d.screen||0;
+    w+=`<tr><td class="t">${dt.getMonth()+1}/${dt.getDate()}</td><td style="width:40%"><div class="meter ok" style="margin:6px 0 2px"><i style="width:${r/mx*100}%"></i></div><span class="mini">${r}분</span></td><td style="width:40%"><div class="meter ${s>k.screenGoal?'over':''}" style="margin:6px 0 2px"><i style="width:${s/mx*100}%"></i></div><span class="mini">${s}분</span></td></tr>`}
+  $('week').innerHTML='<div class="tablewrap">'+w+'</tbody></table></div>';
+  $('bookCount').textContent=rows.length+'건';
+  $('bookTable').innerHTML=rows.length?rows.map(([dk,b])=>`<tr><td class="t">${dk.slice(5).replace('-','/')}</td><td>${esc(b.title)}</td><td class="t">${b.min}</td><td class="t">${b.pages||'–'}</td><td>${b.aloud?'<span class="pill sun">함께</span>':''}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">아직 읽은 책이 없어요.</td></tr>';
+}
+
+function renderPromise(){
+  const k=kid();
+  $('agebox').innerHTML=AGE_GUIDE.map(g=>`<div class="${k.age>=g.min&&k.age<=g.max?'me':''}"><b>${g.t}${k.age>=g.min&&k.age<=g.max?' · '+esc(k.name):''}</b><span>${g.d}</span></div>`).join('');
+  if(document.activeElement?.closest?.('#v-promise .form')==null){$('kName').value=k.name;$('kAge').value=k.age;$('kScreen').value=k.screenGoal;$('kRead').value=k.readGoal}
+  const all=RULES.concat(S.custom.map(c=>({id:c.id,t:c.t,custom:true})));
+  $('rules').innerHTML=all.map(r=>`<label class="check"><input type="checkbox" data-rule="${r.id}" ${S.rules[r.id]?'checked':''}><span style="flex:1">${esc(r.t)}</span>${r.custom?`<button class="x" data-rdel="${r.id}" aria-label="약속 지우기">×</button>`:''}</label>`).join('');
+  $('ruleN').textContent=all.filter(r=>S.rules[r.id]).length+'개 지키는 중';
+  $('rules').querySelectorAll('[data-rule]').forEach(c=>c.onchange=()=>{S.rules[c.dataset.rule]=c.checked;save();renderPromise()});
+  $('rules').querySelectorAll('[data-rdel]').forEach(b=>b.onclick=e=>{e.preventDefault();S.custom=S.custom.filter(c=>c.id!==b.dataset.rdel);delete S.rules[b.dataset.rdel];save();renderPromise()});
+  if(document.activeElement!==$('planWhen'))$('planWhen').value=S.plan.when||'';
+  if(document.activeElement!==$('planWhat'))$('planWhat').value=S.plan.what||'';
+  planOut();
+}
+function planOut(){const w=$('planWhen').value.trim(),x=$('planWhat').value.trim();$('planOut').textContent=w&&x?`“${w}, ${x}.”`:''}
+
+function render(){renderKids();const v=location.hash.slice(1)||'today';if(v==='log')renderLog();else if(v==='promise')renderPromise();else renderToday()}
+
+/* events */
+function addBook(title,min,pages,aloud){const k=kid(),dk=today(),d=day(k,dk);d.read=d.read||[];d.read.push({id:uid(),title:title||'제목 없는 책',min:Math.max(1,Math.round(min)),pages:+pages||0,aloud:!!aloud});setDay(k,dk,d);const m=readMin(d);toast(m>=k.readGoal?'오늘 목표 달성! 별 2개':'기록했어요');render()}
+$('bAdd').onclick=()=>{const min=+$('bMin').value;if(!min){toast('읽은 시간을 분으로 적어 주세요');return}addBook($('bTitle').value.trim(),min,$('bPages').value,$('bAloud').checked);$('bTitle').value='';$('bPages').value='';$('bAloud').checked=false};
+$('bTitle').addEventListener('keydown',e=>{if(e.key==='Enter')$('bAdd').click()});
+
+// timer
+let tRun=false,tStart=0,tAcc=0,tInt=null;
+function tShow(){const s=Math.floor((tAcc+(tRun?Date.now()-tStart:0))/1000);$('tclock').textContent=pad(Math.floor(s/60))+':'+pad(s%60);$('tsave').disabled=s<30;$('treset').disabled=s===0}
+$('tstart').onclick=()=>{if(tRun){tAcc+=Date.now()-tStart;tRun=false;clearInterval(tInt);$('tstart').textContent='이어 읽기'}else{tStart=Date.now();tRun=true;tInt=setInterval(tShow,1000);$('tstart').textContent='잠깐 멈춤';try{navigator.wakeLock?.request('screen').catch(()=>{})}catch(e){}}tShow()};
+$('tsave').onclick=()=>{const ms=tAcc+(tRun?Date.now()-tStart:0);const min=Math.max(1,Math.round(ms/60000));tRun=false;clearInterval(tInt);tAcc=0;$('tstart').textContent='읽기 시작';addBook($('bTitle').value.trim(),min,$('bPages').value,$('bAloud').checked);$('bTitle').value='';$('bPages').value='';tShow()};
+$('treset').onclick=()=>{tRun=false;clearInterval(tInt);tAcc=0;$('tstart').textContent='읽기 시작';tShow()};
+
+$('litNext').onclick=()=>{S.litSkip=(S.litSkip||0)+1;save();renderToday()};
+$('litDone').onclick=()=>{const k=kid(),dk=today(),d=day(k,dk);d.lit=true;setDay(k,dk,d);toast('문해력 활동 완료! 별 1개');render()};
+document.querySelectorAll('[data-scr]').forEach(b=>b.onclick=()=>{const k=kid(),dk=today(),d=day(k,dk);d.screen=Math.max(0,(d.screen||0)+(+b.dataset.scr));setDay(k,dk,d);renderToday()});
+$('bedOff').onchange=e=>{const k=kid(),dk=today(),d=day(k,dk);d.bed=e.target.checked;setDay(k,dk,d);if(d.bed)toast('화면 끄기 성공! 별 1개');renderToday()};
+$('bedBook').onchange=e=>{const k=kid(),dk=today(),d=day(k,dk);d.bedBook=e.target.checked;setDay(k,dk,d);renderToday()};
+
+// rewards dialog
+$('editRewards').onclick=()=>{$('rwText').value=S.rewards.map(r=>`${r.n} / ${r.c}`).join('\n');try{$('rwDlg').showModal()}catch(e){$('rwDlg').setAttribute('open','')}};
+$('rwCancel').onclick=()=>$('rwDlg').close();
+$('rwSave').onclick=()=>{const list=$('rwText').value.split('\n').map(l=>{const m=l.split('/');const n=(m[0]||'').trim();const c=parseInt(m[1],10);return n&&c>0?{n,c}:null}).filter(Boolean);if(list.length)S.rewards=list;save();$('rwDlg').close();render()};
+
+// kid settings
+$('kAge').addEventListener('change',()=>{const d=defaults($('kAge').value);$('kScreen').value=d.screen;$('kRead').value=d.read});
+$('kSave').onclick=()=>{const k=kid();k.name=$('kName').value.trim()||k.name;k.age=Math.min(18,Math.max(2,+$('kAge').value||k.age));k.screenGoal=Math.max(0,+$('kScreen').value||0);k.readGoal=Math.max(5,+$('kRead').value||k.readGoal);save();document.activeElement.blur();toast('저장했어요');render()};
+$('kAdd').onclick=()=>{const d=defaults(8);const k={id:uid(),name:'아이 '+(S.kids.length+1),age:8,screenGoal:d.screen,readGoal:d.read};S.kids.push(k);S.cur=k.id;save();render();$('kName').focus();$('kName').select()};
+let delArm=false;
+$('kDel').onclick=()=>{if(S.kids.length<2){$('kDelMsg').textContent='아이가 한 명뿐이라 지울 수 없어요.';return}if(!delArm){delArm=true;$('kDel').textContent='한 번 더 누르면 기록까지 삭제';setTimeout(()=>{delArm=false;$('kDel').textContent='이 아이 삭제'},4000);return}const id=kid().id;S.kids=S.kids.filter(k=>k.id!==id);delete S.days[id];delete S.spent[id];S.cur=S.kids[0].id;delArm=false;$('kDel').textContent='이 아이 삭제';save();render()};
+$('ruleAdd').onclick=()=>{const t=$('ruleNew').value.trim();if(!t)return;const id='c'+uid();S.custom.push({id,t});S.rules[id]=true;$('ruleNew').value='';save();renderPromise()};
+$('ruleNew').addEventListener('keydown',e=>{if(e.key==='Enter')$('ruleAdd').click()});
+['planWhen','planWhat'].forEach(id=>$(id).addEventListener('input',()=>{S.plan={when:$('planWhen').value,what:$('planWhat').value};save();planOut()}));
+
+$('startFresh').onclick=()=>{const d=defaults(8);const id=uid();S={v:1,sample:false,cur:id,kids:[{id,name:'우리 아이',age:8,screenGoal:d.screen,readGoal:d.read}],days:{},spent:{},rewards:S.rewards,rules:S.rules,custom:S.custom,plan:S.plan,litSkip:0};save();location.hash='#promise';route();setTimeout(()=>{$('kName').focus();$('kName').select()},50);toast('새로 시작해요. 이름과 나이를 먼저 적어 주세요')};
+
+load();route();
+// 자정이 지나면 새 하루로
+let lastDay=today();setInterval(()=>{if(today()!==lastDay){lastDay=today();render()}},60000);
+})();
+</script>
+</body>
+</html>
