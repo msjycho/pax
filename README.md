@@ -7,6 +7,16 @@
 - 방침: https://playax.kr/privacy.html
 - 연결 전 임시: https://msjycho.github.io/pax/
 
+## 생활의 질문 (웹앱)
+
+브라우저에서 바로 쓰는 단일 HTML 앱. 빌드 없이 파일 하나가 곧 앱이고, 기록은 각 브라우저의 localStorage에만 저장됩니다.
+
+- `web/routine/` — 지금 할 일 (시작 페이지): https://playax.kr/web/routine/
+- `web/claude-hub/` — Claude 활용 노트: https://playax.kr/web/claude-hub/
+- `web/reading/` — 책 펴는 시간: https://playax.kr/web/reading/
+- `web/earth-habit/` — 지구사랑 습관: https://playax.kr/web/earth-habit/
+- `web/earth-plan/` — 지구사랑 생활화 확산 방안 (제안서): https://playax.kr/web/earth-plan/
+
 ## 도메인 연결 상태 (2026-10-25)
 
 `playax.kr`의 DNS A 레코드가 GitHub Pages 주소로 확인되고 `https://playax.kr/`가 HTTPS 200 응답을 반환합니다. 저장소의 `CNAME` 파일에는 `playax.kr`가 설정되어 있습니다. 서브도메인을 사용하거나 DNS를 변경할 때는 도메인 관리 콘솔과 GitHub Pages 설정을 함께 확인합니다.

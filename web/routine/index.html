@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>지금 할 일</title>
+<meta name="description" content="브라우저를 열 때 지금 할 일을 먼저 적게 하는 시작 페이지. 시간표, 습관, 뉴스 시간 관리.">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@500;700&display=swap">
+<style>
+/* Layout: 시작 페이지. 왼쪽은 '지금' (질문·현재 블록·뉴스 관문), 오른쪽은 '오늘' (시간표·습관). 폰에서는 한 줄. */
+:root{
+  --bg:#F2F4F1; --surface:#FFFFFF; --ink:#1B2320; --muted:#5D6B66; --line:#DCE2DE;
+  --accent:#2E6B5E; --accent-soft:#E1EEEA; --warn:#B0532B; --warn-soft:#F7E6DD;
+  --f-display:"Noto Serif KR","Nanum Myeongjo",Georgia,serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111614; --surface:#19201D; --ink:#E5EBE8; --muted:#92A09A; --line:#2A3430;
+  --accent:#72C2AC; --accent-soft:#1E302B; --warn:#E3906A; --warn-soft:#35231B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#19201D; --ink:#E5EBE8; --muted:#92A09A; --line:#2A3430;
+  --accent:#72C2AC; --accent-soft:#1E302B; --warn:#E3906A; --warn-soft:#35231B; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+.list li > .empty{grid-column:1/-1}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px;margin-bottom:22px}
+.clock{font-family:var(--f-mono);font-size:2.6rem;font-weight:500;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.date{color:var(--muted);font-size:.95rem}
+.stats{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:.85rem}
+.stats b{color:var(--ink);font-family:var(--f-mono);font-weight:500}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.col{display:flex;flex-direction:column;gap:20px;min-width:0}
+section{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px}
+h2{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ask{background:var(--ink);color:var(--bg);border:none;padding:28px 24px 24px}
+.ask h1{font-family:var(--f-display);font-weight:700;font-size:clamp(1.5rem,3.4vw,2.1rem);line-height:1.3;margin:0 0 6px;text-wrap:balance}
+.ask p{margin:0 0 18px;opacity:.72;font-size:.92rem}
+.ask form{display:flex;gap:8px;flex-wrap:wrap}
+.ask input{flex:1 1 220px;min-width:0;font:inherit;font-size:1.05rem;padding:12px 14px;border-radius:8px;border:1px solid transparent;background:var(--bg);color:var(--ink)}
+.ask input:focus{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:inherit;font-size:.9rem;font-weight:500;padding:10px 16px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible,.cell:focus-visible,.link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.btn.small{padding:5px 10px;font-size:.8rem}
+.btn.ghost{background:transparent}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.ask .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.ask .chip{font:inherit;font-size:.8rem;padding:4px 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--bg) 35%,transparent);background:transparent;color:var(--bg);cursor:pointer;opacity:.85}
+.ask .chip:hover{opacity:1}
+.doing .label{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;opacity:.6}
+.doing .what{font-family:var(--f-display);font-size:clamp(1.4rem,3vw,1.9rem);font-weight:700;line-height:1.3;margin:4px 0 6px;overflow-wrap:anywhere}
+.doing .meta{font-variant-numeric:tabular-nums;font-size:.9rem;opacity:.75;margin-bottom:16px}
+.doing .row{display:flex;gap:8px;flex-wrap:wrap}
+.ask .btn{background:transparent;color:var(--bg);border-color:color-mix(in srgb,var(--bg) 40%,transparent)}
+.ask .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+.now-title{font-size:1.25rem;font-weight:600;margin:0 0 2px}
+.now-time{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.85rem}
+.bar{height:6px;background:var(--line);border-radius:3px;margin:12px 0 10px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.next{color:var(--muted);font-size:.88rem}
+.next b{color:var(--ink);font-weight:500}
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.list li{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.list li:first-child{border-top:none}
+.t{font-family:var(--f-mono);font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.sched li.past{opacity:.45}
+.sched li.cur{background:var(--accent-soft);margin:0 -10px;padding:8px 10px;border-radius:6px;border-top-color:transparent}
+.sched li.cur + li{border-top-color:transparent}
+.sched li.cur .t{color:var(--accent)}
+.sched li.news .ttl::after{content:"뉴스 허용";margin-left:8px;font-size:.7rem;padding:1px 7px;border-radius:999px;background:var(--warn-soft);color:var(--warn);vertical-align:2px}
+.edit input{font:inherit;font-size:.85rem;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-width:0;width:100%}
+.edit .times{display:flex;gap:4px}
+.edit .times input{font-family:var(--f-mono);padding:5px 4px}
+.list.edit li{grid-template-columns:150px minmax(0,1fr) auto}
+@media (max-width:460px){.list.edit li{grid-template-columns:minmax(0,1fr) auto}.list.edit li .times{grid-column:1/-1}}
+.x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:2px 6px;border-radius:4px}
+.x:hover{color:var(--warn)}
+.habits{display:flex;flex-direction:column;gap:2px}
+.hrow{display:grid;grid-template-columns:minmax(0,1fr) repeat(7,26px) 44px;gap:6px;align-items:center;padding:6px 0}
+.hrow.head{font-family:var(--f-mono);font-size:.7rem;color:var(--muted);padding:0 0 4px}
+.hrow.head span{text-align:center}
+.hname{font-size:.9rem;overflow-wrap:anywhere}
+.hname small{display:block;color:var(--muted);font-size:.72rem}
+.cell{width:26px;height:26px;border-radius:6px;border:1px solid var(--line);background:transparent;padding:0;cursor:pointer;color:var(--bg);font-size:.8rem}
+.cell.on{background:var(--accent);border-color:var(--accent)}
+.cell.today{border-color:var(--ink)}
+.cell.past{cursor:default}
+.streak{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);text-align:right}
+@media (max-width:420px){.hrow{grid-template-columns:minmax(0,1fr) repeat(7,22px) 36px;gap:4px}.cell{width:22px;height:22px}}
+.gate p{margin:0 0 12px;color:var(--muted);font-size:.9rem}
+.gate .opts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.gate .opts .btn.sel{border-color:var(--warn);color:var(--warn)}
+.gate input[type=text]{font:inherit;width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);margin-bottom:12px}
+.link{display:inline-block;text-decoration:none;font-weight:500;padding:10px 16px;border-radius:8px;background:var(--warn);color:var(--bg)}
+.link.off{pointer-events:none;opacity:.4}
+.alarm{background:var(--warn-soft);border:1px solid var(--warn);color:var(--ink);border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.alarm b{color:var(--warn)}
+.done-list li{grid-template-columns:52px minmax(0,1fr) auto}
+.done-list .ttl.ok{text-decoration:line-through;color:var(--muted)}
+.tag{font-size:.72rem;color:var(--muted)}
+.empty{color:var(--muted);font-size:.88rem;margin:0}
+.addrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.tv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:end;margin:-6px 0 22px;padding:14px 18px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.tv .big{font-family:var(--f-display);font-size:1.15rem;font-weight:700;text-wrap:balance}
+.tv .big b{font-family:var(--f-mono);font-weight:500;color:var(--accent)}
+.tv .sub{color:var(--muted);font-size:.82rem;grid-column:1/-1}
+.tv .bar{grid-column:1/-1;margin:4px 0 0}
+.tv .ledger{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);text-align:right;white-space:nowrap}
+.tv .ledger b{color:var(--ink);font-weight:500}
+@media (max-width:520px){.tv{grid-template-columns:minmax(0,1fr)}.tv .ledger{text-align:left}}
+.guide ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:10px}
+.guide li{padding-left:2px}
+.guide li b{display:block;font-weight:600}
+.guide li span{color:var(--muted);font-size:.88rem}
+.guide .quote{font-family:var(--f-display);font-size:1rem;margin:0 0 14px;line-height:1.5}
+.foot{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="alarm" class="alarm" hidden></div>
+  <header>
+    <div>
+      <div class="clock" id="clock">--:--</div>
+      <div class="date" id="date"></div>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="tv" id="tv"></div>
+
+  <div class="grid">
+    <div class="col">
+      <section class="ask" id="ask"></section>
+
+      <section>
+        <h2>지금 시간표 블록</h2>
+        <div id="now"></div>
+      </section>
+
+      <section>
+        <h2>오늘 한 일</h2>
+        <ul class="list done-list" id="doneList"></ul>
+      </section>
+
+      <section class="gate" id="gate"></section>
+    </div>
+
+    <div class="col">
+      <section>
+        <h2>오늘의 시간표 <button class="btn small ghost" id="editSched" type="button">편집</button></h2>
+        <ul class="list sched" id="sched"></ul>
+        <div class="addrow" id="schedAdd" hidden>
+          <button class="btn small" id="addBlock" type="button">+ 블록 추가</button>
+          <button class="btn small ghost" id="resetSched" type="button">예시로 되돌리기</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>습관 7일 <button class="btn small ghost" id="editHabits" type="button">편집</button></h2>
+        <div class="habits" id="habits"></div>
+        <div class="addrow" id="habitAdd" hidden>
+          <input id="newHabit" type="text" placeholder="새 습관 이름" style="font:inherit;flex:1 1 160px;min-width:0;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)">
+          <button class="btn small" id="addHabit" type="button">추가</button>
+        </div>
+      </section>
+
+      <section class="guide">
+        <h2>시간 쓰는 원칙</h2>
+        <p class="quote">시간은 모두에게 똑같이 주어지는 유일한 자산이다. 건강과 부는 그 시간을 어디에 넣었느냐의 결과다.</p>
+        <ol>
+          <li><b>소비보다 생산에 먼저 쓴다</b><span>뉴스와 피드는 남이 만든 것을 소비하는 시간이다. 하루의 첫 1시간은 내가 만드는 일에 쓴다.</span></li>
+          <li><b>가장 중요한 일 하나를 집중 블록에 넣는다</b><span>매일 2시간이면 1년에 730시간. 작은 집중이 복리로 쌓인다.</span></li>
+          <li><b>건강은 모든 자산의 원금이다</b><span>수면 7시간, 걷기, 운동 블록은 비용이 아니라 투자다. 원금이 무너지면 수익도 없다.</span></li>
+          <li><b>내 시간의 값을 안다</b><span>월 수입 ÷ 일한 시간 = 시간당 가치. 30분 멍하니 보는 뉴스는 그 절반의 값을 쓴 것이다.</span></li>
+          <li><b>배우고 자산을 만드는 시간을 따로 둔다</b><span>기술 공부, 투자 공부, 나만의 결과물. 시간이 지나도 남는 일에 매주 블록을 잡는다.</span></li>
+          <li><b>기록하면 보인다</b><span>의도를 적고, 끝내고, 돌아본다. 이 페이지의 기록이 그 장부다.</span></li>
+        </ol>
+      </section>
+    </div>
+  </div>
+  <p class="foot">기록은 이 브라우저에만 저장됩니다. 시간표와 습관은 '편집'으로 바꿀 수 있어요.</p>
+</div>
+
+<script>
+(function(){
+const KEY='routine-start-v1';
+const DEFAULT_SCHED=[
+  {s:'07:00',e:'07:30',t:'기상 · 물 한 잔 · 창문 열기'},
+  {s:'07:30',e:'08:00',t:'아침 식사 · 오늘 할 일 3개 적기'},
+  {s:'09:00',e:'12:00',t:'집중 블록 1 (가장 중요한 일)'},
+  {s:'12:00',e:'13:00',t:'점심 · 15분 산책'},
+  {s:'13:00',e:'15:00',t:'집중 블록 2'},
+  {s:'15:00',e:'15:15',t:'화면 끄고 휴식'},
+  {s:'15:15',e:'18:00',t:'업무 · 메일과 잡무 정리'},
+  {s:'19:00',e:'20:00',t:'운동 또는 취미'},
+  {s:'21:00',e:'21:20',t:'뉴스 몰아보기',news:true},
+  {s:'22:30',e:'23:00',t:'내일 준비 · 폰은 침대 밖에'}
+];
+const DEFAULT_HABITS=[
+  {id:'intent',n:'브라우저 열면 의도 먼저 적기',auto:true},
+  {id:'news',n:'뉴스는 정해진 시간에만',auto:true},
+  {id:'top3',n:'아침에 할 일 3개 적기'},
+  {id:'walk',n:'점심 산책 15분'},
+  {id:'screen',n:'자기 전 30분 화면 끄기'}
+];
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){S=null}
+if(!S||typeof S!=='object')S={};
+S.sched=S.sched||DEFAULT_SCHED.map(x=>({...x}));
+S.habits=S.habits||DEFAULT_HABITS.map(x=>({...x}));
+S.days=S.days||{};
+S.current=S.current||null;
+S.newsTimer=S.newsTimer||null;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const dk=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const hm=d=>pad(d.getHours())+':'+pad(d.getMinutes());
+const toMin=s=>{const [h,m]=String(s||'0:0').split(':').map(Number);return (h||0)*60+(m||0)};
+const DOW=['일','월','화','수','목','금','토'];
+function day(k){k=k||dk(new Date());if(!S.days[k])S.days[k]={h:{},intents:[],news:[]};const d=S.days[k];d.h=d.h||{};d.intents=d.intents||[];d.news=d.news||[];return d}
+function inNewsBlock(min){return S.sched.some(b=>b.news&&min>=toMin(b.s)&&min<toMin(b.e))}
+function habitDone(h,k){
+  const d=S.days[k];if(!d)return false;
+  if(h.id==='intent')return (d.intents||[]).length>0;
+  if(h.id==='news')return (d.intents||[]).length>0 && !(d.news||[]).some(n=>!n.ok);
+  return !!(d.h||{})[h.id];
+}
+
+let editSched=false,editHabits=false,gateOpen=false,gateMin=10,gateWait=0,gateTimer=null;
+
+function renderHeader(){
+  const n=new Date();
+  $('clock').textContent=hm(n);
+  $('date').textContent=`${n.getMonth()+1}월 ${n.getDate()}일 ${DOW[n.getDay()]}요일 · ${greet(n.getHours())}`;
+  const d=day();
+  const done=d.intents.filter(i=>i.done).length;
+  $('stats').innerHTML=`<span>의도 <b>${d.intents.length}</b></span><span>완료 <b>${done}</b></span><span>뉴스 <b>${d.news.length}</b>회</span>`;
+}
+function greet(h){if(h<5)return '늦은 밤이에요. 쉬는 것도 할 일입니다';if(h<11)return '좋은 아침';if(h<14)return '점심 무렵';if(h<18)return '오후';if(h<22)return '저녁';return '하루를 닫을 시간'}
+
+function renderAsk(){
+  const el=$('ask');
+  if(S.current){
+    const st=new Date(S.current.at);const mins=Math.max(0,Math.round((Date.now()-S.current.at)/60000));
+    el.innerHTML=`<div class="doing"><div class="label">지금 하는 일</div><div class="what">${esc(S.current.t)}</div>
+      <div class="meta">${hm(st)} 시작 · ${mins}분째</div>
+      <div class="row"><button class="btn primary" id="finish" type="button">끝냈어요</button>
+      <button class="btn" id="drop" type="button">다른 일로 바꾸기</button></div></div>`;
+    $('finish').onclick=()=>endCurrent(true);
+    $('drop').onclick=()=>endCurrent(false);
+    return;
+  }
+  const cur=currentBlock();
+  const sug=[...new Set([cur&&cur.t,'메일 확인','검색할 것 하나 찾기','오늘 할 일 정리'].filter(Boolean))].slice(0,4);
+  el.innerHTML=`<h1>브라우저를 연 이유가 뭔가요?</h1>
+    <p>한 줄로 적고 시작하세요. 적을 게 없다면 브라우저를 닫아도 됩니다.</p>
+    <form id="askForm" autocomplete="off"><input id="intent" type="text" maxlength="120" placeholder="예: 내일 회의 자료 찾기" aria-label="지금 할 일">
+    <button class="btn primary" type="submit">시작</button></form>
+    <div class="chips">${sug.map(s=>`<button class="chip" type="button" data-s="${esc(s)}">${esc(s)}</button>`).join('')}</div>`;
+  $('askForm').onsubmit=e=>{e.preventDefault();const v=$('intent').value.trim();if(v)startIntent(v)};
+  el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{$('intent').value=c.dataset.s;$('intent').focus()});
+  setTimeout(()=>{const i=$('intent');if(i&&document.activeElement===document.body)i.focus()},50);
+}
+function startIntent(t){S.current={t,at:Date.now()};save();renderAll()}
+function endCurrent(ok){
+  const c=S.current;if(!c)return;
+  day(dk(new Date(c.at))).intents.push({t:c.t,at:c.at,end:Date.now(),done:ok});
+  S.current=null;save();renderAll();
+}
+
+function currentBlock(){const m=new Date().getHours()*60+new Date().getMinutes();return S.sched.find(b=>m>=toMin(b.s)&&m<toMin(b.e))}
+function sortedSched(){return S.sched.map((b,i)=>({...b,i})).sort((a,b)=>toMin(a.s)-toMin(b.s))}
+function renderNow(){
+  const m=new Date().getHours()*60+new Date().getMinutes();
+  const list=sortedSched();
+  const cur=list.find(b=>m>=toMin(b.s)&&m<toMin(b.e));
+  const next=list.find(b=>toMin(b.s)>m);
+  let h='';
+  if(cur){
+    const p=Math.round((m-toMin(cur.s))/Math.max(1,toMin(cur.e)-toMin(cur.s))*100);
+    h+=`<p class="now-title">${esc(cur.t)}</p><div class="now-time">${cur.s}–${cur.e} · ${toMin(cur.e)-m}분 남음</div><div class="bar"><i style="width:${p}%"></i></div>`;
+  }else{
+    h+=`<p class="now-title">정해진 블록이 없는 시간</p><div class="now-time">비어 있는 시간이에요. 쉬거나, 다음 블록을 준비하세요.</div><div class="bar"><i style="width:0"></i></div>`;
+  }
+  h+= next?`<div class="next">다음 · <b>${next.s} ${esc(next.t)}</b> (${toMin(next.s)-m}분 후)</div>`:`<div class="next">오늘 남은 블록이 없어요.</div>`;
+  $('now').innerHTML=h;
+}
+
+function renderSched(){
+  const el=$('sched');el.classList.toggle('edit',editSched);
+  $('editSched').textContent=editSched?'완료':'편집';$('schedAdd').hidden=!editSched;
+  const m=new Date().getHours()*60+new Date().getMinutes();
+  const list=sortedSched();
+  if(editSched){
+    el.innerHTML=list.map(b=>`<li data-i="${b.i}"><div class="times"><input id="s${b.i}" type="time" value="${b.s}" data-k="s"><input id="e${b.i}" type="time" value="${b.e}" data-k="e"></div>
+      <input id="t${b.i}" type="text" value="${esc(b.t)}" data-k="t" aria-label="블록 이름">
+      <span style="display:flex;align-items:center;gap:2px"><label class="tag" title="이 시간엔 뉴스 허용"><input type="checkbox" id="n${b.i}" data-k="news" ${b.news?'checked':''}> 뉴스</label><button class="x" type="button" data-del="${b.i}" aria-label="삭제">×</button></span></li>`).join('');
+    el.querySelectorAll('input').forEach(inp=>inp.onchange=()=>{const i=+inp.closest('li').dataset.i;const k=inp.dataset.k;S.sched[i][k]=k==='news'?inp.checked:inp.value;save();renderNow();renderGate()});
+    el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{S.sched.splice(+b.dataset.del,1);save();renderSched();renderNow()});
+    return;
+  }
+  el.innerHTML=list.length?list.map(b=>{const s=toMin(b.s),e=toMin(b.e);const cls=[m>=e?'past':'',m>=s&&m<e?'cur':'',b.news?'news':''].join(' ');
+    return `<li class="${cls}"><span class="t">${b.s}–${b.e}</span><span class="ttl">${esc(b.t)}</span><span></span></li>`}).join(''):'<li><span class="empty">블록이 없어요. 편집에서 추가하세요.</span></li>';
+}
+
+function last7(){const out=[];const n=new Date();for(let i=6;i>=0;i--){const d=new Date(n.getFullYear(),n.getMonth(),n.getDate()-i);out.push(d)}return out}
+function streak(h){let c=0;const n=new Date();for(let i=0;i<400;i++){const d=new Date(n.getFullYear(),n.getMonth(),n.getDate()-i);const ok=habitDone(h,dk(d));if(ok)c++;else if(i===0)continue;else break}return c}
+function renderHabits(){
+  $('editHabits').textContent=editHabits?'완료':'편집';$('habitAdd').hidden=!editHabits;
+  const days=last7();const today=dk(new Date());
+  let h=`<div class="hrow head"><span></span>${days.map(d=>`<span>${DOW[d.getDay()]}</span>`).join('')}<span style="text-align:right">연속</span></div>`;
+  h+=S.habits.map((x,hi)=>{
+    const cells=days.map(d=>{const k=dk(d);const on=habitDone(x,k);const isT=k===today;
+      const can=isT&&!x.auto;
+      return `<button class="cell ${on?'on':''} ${isT?'today':''} ${can?'':'past'}" type="button" ${can?`data-h="${hi}"`:'tabindex="-1"'} aria-label="${esc(x.n)} ${k} ${on?'완료':'미완료'}">${on?'✓':''}</button>`}).join('');
+    const name=editHabits?`<span style="display:flex;gap:4px;align-items:center"><input type="text" id="hn${hi}" value="${esc(x.n)}" data-hn="${hi}" style="font:inherit;font-size:.85rem;flex:1;min-width:0;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)"><button class="x" type="button" data-hd="${hi}" aria-label="삭제">×</button></span>`
+      :`<span class="hname">${esc(x.n)}${x.auto?'<small>자동 기록</small>':''}</span>`;
+    return `<div class="hrow">${name}${cells}<span class="streak">${streak(x)}일</span></div>`}).join('');
+  $('habits').innerHTML=h;
+  $('habits').querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{const x=S.habits[+b.dataset.h];const d=day();d.h[x.id]=!d.h[x.id];save();renderHabits()});
+  $('habits').querySelectorAll('[data-hn]').forEach(i=>i.onchange=()=>{S.habits[+i.dataset.hn].n=i.value.trim()||S.habits[+i.dataset.hn].n;save()});
+  $('habits').querySelectorAll('[data-hd]').forEach(b=>b.onclick=()=>{S.habits.splice(+b.dataset.hd,1);save();renderHabits()});
+}
+
+function renderDone(){
+  const d=day();const items=[...d.intents].reverse();
+  const news=d.news.map(n=>({t:'뉴스 · '+(n.why||'그냥'),at:n.at,news:true,min:n.min,ok:n.ok}));
+  const all=[...items,...news].sort((a,b)=>b.at-a.at);
+  $('doneList').innerHTML=all.length?all.map(i=>`<li><span class="t">${hm(new Date(i.at))}</span><span class="ttl ${i.done?'ok':''}">${esc(i.t)}</span><span class="tag">${i.news?(i.ok?'허용 시간':i.min+'분'):(i.done?'완료':'바꿈')}</span></li>`).join(''):'<li><p class="empty" style="grid-column:1/-1">아직 없어요. 위에 첫 번째 할 일을 적어 보세요.</p></li>';
+}
+
+function renderGate(){
+  const el=$('gate');const m=new Date().getHours()*60+new Date().getMinutes();
+  const allowed=inNewsBlock(m);
+  const nb=sortedSched().find(b=>b.news);
+  if(allowed){
+    el.innerHTML=`<h2>뉴스</h2><p>지금은 정해 둔 뉴스 시간이에요. 끝나는 시간까지 편하게 보세요.</p><a class="link" id="newsGo" href="https://www.naver.com" target="_blank" rel="noopener">네이버 열기</a>`;
+    $('newsGo').onclick=()=>{day().news.push({at:Date.now(),why:'뉴스 시간',min:0,ok:true});save();renderHeader();renderDone()};
+    return;
+  }
+  if(!gateOpen){
+    el.innerHTML=`<h2>뉴스</h2><p>뉴스 시간은 ${nb?`<b>${nb.s}</b>`:'아직 정하지 않았어요'}. 그 전에 꼭 봐야 한다면 이유와 시간을 정하고 들어가세요.</p><button class="btn" id="gateOpen" type="button">그래도 지금 볼래요</button>`;
+    $('gateOpen').onclick=()=>{gateOpen=true;gateWait=10;renderGate();tickGate()};
+    return;
+  }
+  el.innerHTML=`<h2>잠깐 멈춤</h2><p>무엇을 확인하려고 하나요? 몇 분만 볼지 정하면 시간이 됐을 때 알려 드릴게요.</p>
+    <input type="text" id="gateWhy" placeholder="예: 오늘 날씨, 특정 기사 하나" maxlength="80">
+    <div class="opts">${[5,10,15].map(n=>`<button class="btn small ${gateMin===n?'sel':''}" type="button" data-m="${n}">${n}분</button>`).join('')}</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="link ${gateWait>0?'off':''}" id="gateGo" href="https://www.naver.com" target="_blank" rel="noopener" aria-disabled="${gateWait>0}">${gateWait>0?`숨 한 번 쉬고… ${gateWait}`:`${gateMin}분만 보기`}</a>
+    <button class="btn ghost" id="gateCancel" type="button">안 볼래요</button></div>`;
+  el.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{gateMin=+b.dataset.m;const w=$('gateWhy').value;renderGate();$('gateWhy').value=w});
+  $('gateCancel').onclick=()=>{gateOpen=false;clearInterval(gateTimer);renderGate()};
+  $('gateGo').onclick=e=>{if(gateWait>0){e.preventDefault();return}
+    const why=$('gateWhy').value.trim();
+    day().news.push({at:Date.now(),why:why||'이유 없음',min:gateMin,ok:false});
+    S.newsTimer={until:Date.now()+gateMin*60000,min:gateMin};save();gateOpen=false;renderAll();};
+}
+function tickGate(){clearInterval(gateTimer);gateTimer=setInterval(()=>{gateWait--;if(gateWait<=0){clearInterval(gateTimer);gateWait=0}
+  const a=$('gateGo');if(!a){clearInterval(gateTimer);return}
+  a.classList.toggle('off',gateWait>0);a.setAttribute('aria-disabled',gateWait>0);a.textContent=gateWait>0?`숨 한 번 쉬고… ${gateWait}`:`${gateMin}분만 보기`},1000)}
+
+function renderAlarm(){
+  const el=$('alarm');const t=S.newsTimer;
+  if(!t){el.hidden=true;document.title='지금 할 일';return}
+  const left=Math.ceil((t.until-Date.now())/60000);
+  if(left>0){el.hidden=false;el.innerHTML=`<span>뉴스 타이머 · <b>${left}분</b> 남았어요.</span><button class="btn small" id="alarmOff" type="button">다 봤어요</button>`}
+  else{el.hidden=false;el.innerHTML=`<span><b>${t.min}분이 지났어요.</b> 이제 뉴스 탭을 닫고, 위에 다음 할 일을 적어 보세요.</span><button class="btn small primary" id="alarmOff" type="button">닫았어요</button>`;document.title='⏰ 시간 됐어요';}
+  $('alarmOff').onclick=()=>{S.newsTimer=null;save();renderAlarm()};
+}
+
+function fmtM(m){m=Math.max(0,Math.round(m));const h=Math.floor(m/60),r=m%60;return h?`${h}시간 ${r}분`:`${r}분`}
+function renderTV(){
+  const n=new Date();const m=n.getHours()*60+n.getMinutes();const list=sortedSched();
+  const wake=list.length?toMin(list[0].s):420, bed=list.length?Math.max(...list.map(b=>toMin(b.e))):1380;
+  const left=bed-m, total=Math.max(1,bed-wake);
+  const d=day();
+  let focus=d.intents.filter(i=>i.done).reduce((a,i)=>a+(i.end-i.at)/60000,0);
+  if(S.current)focus+=(Date.now()-S.current.at)/60000;
+  const news=d.news.filter(x=>!x.ok).reduce((a,x)=>a+x.min,0);
+  const yEnd=new Date(n.getFullYear()+1,0,1);const yDays=Math.ceil((yEnd-n)/86400000);
+  const big= m<wake?`아직 하루가 시작되지 않았어요. 지금은 잠이 가장 좋은 투자입니다.`:left>0?`오늘 깨어 있는 시간이 <b>${fmtM(left)}</b> 남았어요.`:(m<wake?`아직 하루가 시작되지 않았어요. 지금은 잠이 가장 좋은 투자입니다.`:`오늘의 시간은 다 썼어요. 잘 쉬는 것이 내일의 자본입니다.`);
+  const p=Math.min(100,Math.max(0,(m-wake)/total*100));
+  $('tv').innerHTML=`<div class="big">${big}</div><div class="ledger">의도한 시간 <b>${fmtM(focus)}</b> · 뉴스 <b>${fmtM(news)}</b></div>
+    <div class="bar"><i style="width:${p}%"></i></div>
+    <div class="sub">${list.length?`${list[0].s} 기상 · ${pad(Math.floor(bed/60)%24)}:${pad(bed%60)} 마무리 기준`:''} · 올해 남은 날 ${yDays}일. 다시 오지 않는 시간이에요.</div>`;
+}
+function renderAll(){renderTV();renderHeader();renderAsk();renderNow();renderSched();renderHabits();renderDone();renderGate();renderAlarm()}
+
+$('editSched').onclick=()=>{editSched=!editSched;renderSched()};
+$('addBlock').onclick=()=>{S.sched.push({s:'12:00',e:'12:30',t:'새 블록'});save();renderSched()};
+$('resetSched').onclick=()=>{S.sched=DEFAULT_SCHED.map(x=>({...x}));save();renderSched();renderNow()};
+$('editHabits').onclick=()=>{editHabits=!editHabits;renderHabits()};
+$('addHabit').onclick=()=>{const v=$('newHabit').value.trim();if(!v)return;S.habits.push({id:'h'+Date.now(),n:v});$('newHabit').value='';save();renderHabits()};
+
+renderAll();
+let lastDay=dk(new Date());
+setInterval(()=>{const k=dk(new Date());renderTV();renderHeader();renderNow();renderAlarm();if(!editSched)renderSched();
+  if(S.current){const m=document.querySelector('.doing .meta');if(m){const mins=Math.max(0,Math.round((Date.now()-S.current.at)/60000));m.textContent=`${hm(new Date(S.current.at))} 시작 · ${mins}분째`}}
+  if(k!==lastDay){lastDay=k;renderAll()}},15000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderHeader();renderNow();renderAlarm();renderDone()}});
+})();
+</script>
+</body>
+</html>
