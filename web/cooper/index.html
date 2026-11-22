@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>쿠퍼 IT 실습실</title>
+<meta name="description" content="장바구니 수량 +1 하나로 C 포인터, Java 객체, API, DB, 보안까지 따라가는 IT 실습실. 정보처리기사·정보보안기사 준비용.">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@500;700&display=swap">
+<style>
+:root{
+  --bg:#F3F2EE; --surface:#FFFFFF; --ink:#1C1F24; --muted:#5E6570; --line:#DDDCD6;
+  --accent:#2F5DA8; --accent-soft:#E3EAF6; --ok:#2E7D57; --ok-soft:#E0F1E8;
+  --warn:#B0532B; --warn-soft:#F7E6DD; --code-bg:#F1F3F7;
+  --f-display:"Noto Serif KR",Georgia,serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121418; --surface:#1A1D23; --ink:#E6E8EC; --muted:#959CA8; --line:#2B2F37;
+  --accent:#86A8E6; --accent-soft:#1F2A3D; --ok:#6CC69A; --ok-soft:#18291F;
+  --warn:#E3906A; --warn-soft:#35231B; --code-bg:#15181D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121418; --surface:#1A1D23; --ink:#E6E8EC; --muted:#959CA8; --line:#2B2F37;
+  --accent:#86A8E6; --accent-soft:#1F2A3D; --ok:#6CC69A; --ok-soft:#18291F;
+  --warn:#E3906A; --warn-soft:#35231B; --code-bg:#15181D; color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65;margin:0;word-break:keep-all;overflow-wrap:break-word}
+.wrap{max-width:980px;margin:0 auto;padding:24px max(16px,env(safe-area-inset-right,0px)) 64px max(16px,env(safe-area-inset-left,0px))}
+header.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px 24px;margin-bottom:16px}
+header.top a.home{color:var(--muted);font-size:.85rem;text-decoration:none}
+header.top h1{font-family:var(--f-display);font-size:clamp(1.5rem,4vw,2.1rem);margin:2px 0 0;line-height:1.25}
+header.top p{margin:4px 0 0;color:var(--muted);font-size:.92rem}
+.meter{font-family:var(--f-mono);font-size:.82rem;color:var(--muted);text-align:right}
+.meter b{color:var(--ink);font-weight:500;font-size:1.2rem}
+nav.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:20px;overflow-x:auto;position:sticky;top:0;background:var(--bg);z-index:5}
+nav.tabs a{padding:10px 14px;text-decoration:none;color:var(--muted);font-weight:500;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
+nav.tabs a[aria-current="page"]{color:var(--ink);border-color:var(--accent)}
+nav.tabs .badge{display:inline-block;min-width:18px;padding:0 6px;margin-left:4px;border-radius:99px;background:var(--warn);color:var(--surface);font-size:.72rem;text-align:center}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.view{display:flex;flex-direction:column;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;min-width:0}
+.lead{background:var(--ink);color:var(--bg);border:none}
+.lead h2{font-family:var(--f-display);font-size:clamp(1.25rem,3vw,1.6rem);margin:0 0 6px;line-height:1.35}
+.lead p{margin:0;opacity:.8}
+h2.eyebrow{font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 10px}
+h3{font-family:var(--f-display);font-size:1.15rem;margin:0 0 8px;line-height:1.4}
+p{margin:0 0 10px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.tag{display:inline-block;font-size:.72rem;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-weight:600;margin:0 4px 4px 0}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+code{font-family:var(--f-mono);font-size:.88em;background:var(--code-bg);padding:1px 5px;border-radius:4px;word-break:break-all}
+pre{font-family:var(--f-mono);font-size:.84rem;line-height:1.55;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:0 0 12px;overflow-x:auto;white-space:pre}
+pre .hl{background:var(--accent-soft);display:inline-block;width:100%;border-left:3px solid var(--accent);margin-left:-14px;padding-left:11px}
+table{border-collapse:collapse;width:100%;margin:0 0 12px;font-size:.9rem}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:.8rem}
+.tbl{overflow-x:auto}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 14px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:600}
+button.round{width:34px;height:34px;padding:0;font-size:1.1rem;line-height:1}
+button:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spread{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.progress{height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.attack{border-left:3px solid var(--warn);background:var(--warn-soft);border-radius:0 8px 8px 0;padding:10px 14px;margin:0 0 12px}
+.attack h4{margin:0 0 6px;color:var(--warn);font-size:.85rem}
+.attack p{margin:0 0 6px}
+.check{border:1px solid var(--line);border-radius:8px;padding:14px;margin-top:10px}
+.check .q{font-weight:600;margin-bottom:8px}
+.opts{display:grid;gap:6px}
+.opts button{text-align:left;width:100%}
+.opts button.right{border-color:var(--ok);background:var(--ok-soft)}
+.opts button.wrong{border-color:var(--warn);background:var(--warn-soft)}
+.why{margin-top:8px;font-size:.9rem}
+.steps-nav{display:flex;gap:6px;flex-wrap:wrap}
+.steps-nav a{font-size:.82rem;padding:4px 10px;border:1px solid var(--line);border-radius:99px;text-decoration:none;color:var(--muted)}
+.steps-nav a.done{border-color:var(--ok);color:var(--ok)}
+/* 실습실 */
+.lab{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:14px}
+@media (max-width:760px){.lab{grid-template-columns:minmax(0,1fr)}}
+.lab>.view{min-width:0}
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:none}
+.item .name{font-weight:600}
+.qty{font-family:var(--f-mono);min-width:2ch;text-align:center;font-size:1.05rem}
+.total{font-family:var(--f-mono);font-size:1.1rem;text-align:right;margin-top:10px}
+.subtabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:-4px 0 12px;overflow-x:auto}
+.subtabs button{border:none;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted);padding:8px 12px;white-space:nowrap}
+.subtabs button[aria-selected="true"]{color:var(--ink);border-color:var(--accent)}
+.status{font-family:var(--f-mono);font-weight:600}
+.status.s2{color:var(--ok)} .status.s4{color:var(--warn)}
+.toggle{display:flex;gap:10px;align-items:flex-start;padding:8px 0}
+.toggle input{margin-top:5px;accent-color:var(--accent)}
+.log{font-family:var(--f-mono);font-size:.8rem;max-height:160px;overflow:auto;margin:0;padding:0;list-style:none}
+.log li{padding:3px 0;border-bottom:1px dashed var(--line)}
+.who{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.who button{border:none;border-radius:0;padding:5px 12px}
+.who button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.flow{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;margin:-2px 0 12px}
+.flow a{text-decoration:none}
+.mapbox{overflow-x:auto;margin:0 -6px}
+.mapbox svg{display:block;min-width:600px;width:100%;height:auto}
+.mapbox text{font-family:var(--f-body);fill:var(--ink)}
+.mapbox .lane{fill:var(--muted);font-size:12px;font-weight:600}
+.mapbox .lanehint{fill:var(--muted);font-size:10.5px}
+.mapbox .laneline{stroke:var(--line);stroke-width:1;stroke-dasharray:2 4}
+.mapbox .edge{fill:none;stroke:var(--accent);stroke-width:2;opacity:.55}
+.mapbox .node circle{fill:var(--surface);stroke:var(--accent);stroke-width:2}
+.mapbox .node.done circle{fill:var(--ok);stroke:var(--ok)}
+.mapbox .node.meet circle{stroke:var(--warn);stroke-width:3}
+.mapbox .node text{font-size:12.5px}
+.mapbox a:hover circle,.mapbox a:focus circle{stroke-width:4}
+.empty{color:var(--muted);text-align:center;padding:24px 0}
+footer{margin-top:32px;color:var(--muted);font-size:.82rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <a class="home" href="../../">← PAX</a>
+      <h1>쿠퍼 IT 실습실</h1>
+      <p>빗방울이 모여 물줄기가 되고, 물줄기가 다시 합쳐진다. 코드, 자료구조, 네트워크, DB, 보안도 그렇게 하나로 흐른다.</p>
+    </div>
+    <div class="meter" id="meter"></div>
+  </header>
+  <nav class="tabs" id="tabs">
+    <a href="#/">학습</a>
+    <a href="#/map">물길 지도</a>
+    <a href="#/lab">실습실</a>
+    <a href="#/review">복습</a>
+  </nav>
+  <main id="app"></main>
+  <footer>학습 기록은 이 브라우저에만 저장됩니다. 실습실의 네트워크·Java·DB 처리는 브라우저 안에서 도는 모의 처리입니다.</footer>
+</div>
+
+<script src="lessons.js"></script>
+<script>
+(function(){
+"use strict";
+var UNITS = window.COOPER_UNITS || [];
+var app = document.getElementById("app");
+var DAY = 86400000;
+var INTERVALS = [0, 1, 7, 30]; // 복습 상자별 간격(일)
+
+/* ---------- 저장 ---------- */
+var KEY = "cooper.v1";
+function load(){ try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ return {}; } }
+var store = load();
+store.checks = store.checks || {};
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e){} }
+
+function ckey(u, c){ return u.id + "/" + c.id; }
+function record(u, c, ok){
+  var k = ckey(u, c), prev = store.checks[k] || { box: 0 };
+  var box = ok ? Math.min(prev.box + 1, INTERVALS.length - 1) : 0;
+  store.checks[k] = { ok: ok, box: box, at: Date.now(), due: Date.now() + (ok ? INTERVALS[box] * DAY : 0) };
+  save(); renderMeter();
+}
+function allChecks(){
+  var out = [];
+  UNITS.forEach(function(u){ u.steps.forEach(function(s){ s.checks.forEach(function(c){ out.push({ u: u, s: s, c: c }); }); }); });
+  return out;
+}
+function dueList(){
+  var now = Date.now();
+  return allChecks().filter(function(x){ var r = store.checks[ckey(x.u, x.c)]; return r && r.due <= now; });
+}
+function stepDone(u, s){ return s.checks.every(function(c){ var r = store.checks[ckey(u, c)]; return r && r.box > 0; }); }
+function unitPct(u){
+  var n = 0, d = 0;
+  u.steps.forEach(function(s){ s.checks.forEach(function(c){ n++; var r = store.checks[ckey(u, c)]; if (r && r.box > 0) d++; }); });
+  return n ? Math.round(d * 100 / n) : 0;
+}
+
+/* ---------- 출력 도우미 ---------- */
+function esc(t){ return String(t).replace(/[&<>"']/g, function(ch){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]; }); }
+function inline(t){
+  return esc(t).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+}
+function pre(src, hlLines){
+  var lines = String(src).split("\n");
+  return "<pre>" + lines.map(function(l, i){
+    var h = esc(l) || " ";
+    return hlLines && hlLines.indexOf(i) >= 0 ? '<span class="hl">' + h + "</span>" : h;
+  }).join("\n") + "</pre>";
+}
+function h(html){ app.innerHTML = html; }
+function won(n){ return n.toLocaleString("ko-KR") + "원"; }
+
+function renderMeter(){
+  var all = allChecks(), done = all.filter(function(x){ var r = store.checks[ckey(x.u, x.c)]; return r && r.box > 0; }).length;
+  document.getElementById("meter").innerHTML = "익힌 문제 <b>" + done + "</b> / " + all.length;
+  var due = dueList().length, a = document.querySelector('#tabs a[href="#/review"]');
+  a.innerHTML = "복습" + (due ? '<span class="badge">' + due + "</span>" : "");
+}
+
+/* ---------- 화면: 학습 홈 ---------- */
+function viewHome(){
+  var due = dueList().length;
+  var html = '<section class="view">';
+  html += '<div class="card lead"><h2>오늘 한 동작을 끝까지 설명할 수 있는가</h2>' +
+    "<p>우유 옆 <b>+</b>를 누르면 2개가 3개가 된다. 그 사이에 포인터, 객체, HTTP, SQL, 접근통제가 모두 지나간다. 단원을 읽고, 예측 문제를 풀고, 실습실에서 직접 눌러 보고, 정해진 날에 복습한다.</p></div>";
+  if (due) html += '<div class="card spread"><div><b>복습할 문제 ' + due + '개</b><div class="muted small">어제 맞힌 문제와 틀린 문제가 돌아왔습니다.</div></div><a href="#/review"><button class="primary">복습 시작</button></a></div>';
+  html += '<div class="grid2">';
+  UNITS.forEach(function(u){
+    var pct = unitPct(u);
+    html += '<article class="card"><h2 class="eyebrow">단원 ' + u.no + "</h2><h3>" + esc(u.title) + "</h3><p class=\"small\">" + esc(u.goal) + "</p>" +
+      "<div>" + u.exam.map(function(e){ return '<span class="tag">' + esc(e) + "</span>"; }).join("") + "</div>" +
+      '<div class="progress" style="margin:12px 0 6px"><i style="width:' + pct + '%"></i></div>' +
+      '<div class="spread"><span class="muted small">' + pct + '% 익힘 · ' + u.steps.length + '개 주제</span><a href="#/unit/' + u.id + '"><button class="primary">' + (pct ? "이어서" : "시작") + "</button></a></div></article>";
+  });
+  html += "</div>";
+  html += '<div class="card"><h2 class="eyebrow">공부 방법</h2><div class="grid2">' +
+    "<div><b>당일</b><p class=\"small\">개념을 한 문장으로 말해 보고 예측 문제를 푼다.</p></div>" +
+    "<div><b>1일 뒤</b><p class=\"small\">자료를 덮고 복습 탭의 문제를 다시 푼다. 실무 예시를 하나 써 본다.</p></div>" +
+    "<div><b>7일 · 30일 뒤</b><p class=\"small\">맞힌 문제는 간격이 길어지고, 틀린 문제는 바로 다시 돌아온다.</p></div>" +
+    "</div></div>";
+  html += "</section>";
+  h(html);
+}
+
+/* ---------- 화면: 단원 ---------- */
+function checkHtml(u, c, mode){
+  var r = store.checks[ckey(u, c)];
+  var html = '<div class="check" data-u="' + u.id + '" data-c="' + c.id + '"><div class="q">' + inline(c.q) + '</div><div class="opts">';
+  c.options.forEach(function(o, i){ html += '<button data-i="' + i + '">' + inline(o) + "</button>"; });
+  html += '</div><div class="why" hidden></div>';
+  if (mode !== "review" && r) html += '<div class="muted small" style="margin-top:6px">지난 기록: ' + (r.ok ? "맞힘" : "틀림") + "</div>";
+  return html + "</div>";
+}
+function bindChecks(onDone){
+  app.querySelectorAll(".check").forEach(function(box){
+    var u = UNITS.filter(function(x){ return x.id === box.dataset.u; })[0];
+    var c = null;
+    u.steps.forEach(function(s){ s.checks.forEach(function(x){ if (x.id === box.dataset.c) c = x; }); });
+    box.querySelectorAll(".opts button").forEach(function(b){
+      b.addEventListener("click", function(){
+        if (box.dataset.answered) return;
+        box.dataset.answered = "1";
+        var i = +b.dataset.i, ok = i === c.answer;
+        box.querySelectorAll(".opts button").forEach(function(x){
+          x.disabled = true;
+          if (+x.dataset.i === c.answer) x.classList.add("right");
+        });
+        if (!ok) b.classList.add("wrong");
+        var why = box.querySelector(".why");
+        why.hidden = false;
+        why.innerHTML = (ok ? '<span class="tag ok">맞음</span> ' : '<span class="tag warn">다시</span> ') + inline(c.why);
+        record(u, c, ok);
+        if (onDone) onDone(ok);
+      });
+    });
+  });
+}
+function viewUnit(id, stepId){
+  var u = UNITS.filter(function(x){ return x.id === id; })[0];
+  if (!u) return viewHome();
+  var idx = 0;
+  u.steps.forEach(function(s, i){ if (s.id === stepId) idx = i; });
+  var s = u.steps[idx];
+  var html = '<section class="view">';
+  html += '<div class="card"><h2 class="eyebrow">단원 ' + u.no + " · " + (idx + 1) + " / " + u.steps.length + "</h2><h3>" + esc(u.title) + '</h3><div class="steps-nav">';
+  u.steps.forEach(function(x, i){
+    html += '<a href="#/unit/' + u.id + "/" + x.id + '" class="' + (stepDone(u, x) ? "done" : "") + '"' + (i === idx ? ' aria-current="step" style="border-color:var(--accent);color:var(--ink)"' : "") + ">" + (i + 1) + ". " + esc(x.title.split(" · ")[0]) + "</a>";
+  });
+  html += "</div></div>";
+  html += '<article class="card"><div><span class="tag">' + esc(streamName(s.stream)) + " 물줄기</span></div><h3>" + inline(s.title) + "</h3>" + flowHtml(u, s);
+  if (s.code) html += pre(s.code.src);
+  if (s.table) {
+    html += '<div class="tbl"><table><thead><tr>' + s.table.head.map(function(t){ return "<th>" + inline(t) + "</th>"; }).join("") + "</tr></thead><tbody>";
+    s.table.rows.forEach(function(r){ html += "<tr>" + r.map(function(t){ return "<td>" + inline(t) + "</td>"; }).join("") + "</tr>"; });
+    html += "</tbody></table></div>";
+  }
+  s.body.forEach(function(p){ html += "<p>" + inline(p) + "</p>"; });
+  if (s.attack) html += '<div class="attack"><h4>공격자 관점</h4>' + s.attack.map(function(p){ return "<p>" + inline(p) + "</p>"; }).join("") + "</div>";
+  html += '<h2 class="eyebrow" style="margin-top:16px">예측해 보기</h2>';
+  s.checks.forEach(function(c){ html += checkHtml(u, c); });
+  html += "</article>";
+  var prev = u.steps[idx - 1], next = u.steps[idx + 1];
+  html += '<div class="spread">' +
+    (prev ? '<a href="#/unit/' + u.id + "/" + prev.id + '"><button>← 이전</button></a>' : "<span></span>") +
+    (next ? '<a href="#/unit/' + u.id + "/" + next.id + '"><button class="primary">다음 →</button></a>' : '<a href="#/lab"><button class="primary">실습실에서 눌러 보기 →</button></a>') +
+    "</div></section>";
+  h(html);
+  bindChecks();
+  window.scrollTo(0, 0);
+}
+
+/* ---------- 물줄기 ---------- */
+var STREAMS = window.COOPER_STREAMS || [];
+function streamName(id){ var x = STREAMS.filter(function(t){ return t.id === id; })[0]; return x ? x.name : id; }
+function findStep(u, ref){
+  var p = String(ref).split("/"), uu = p.length > 1 ? UNITS.filter(function(x){ return x.id === p[0]; })[0] : u, sid = p[p.length - 1];
+  var st = uu && uu.steps.filter(function(x){ return x.id === sid; })[0];
+  return st ? { u: uu, s: st } : null;
+}
+function flowsInto(u, s){
+  var out = [];
+  UNITS.forEach(function(uu){ uu.steps.forEach(function(st){ (st.flowsFrom || []).forEach(function(r){ var f = findStep(uu, r); if (f && f.s === s) out.push({ u: uu, s: st }); }); }); });
+  return out;
+}
+function short(s){ return s.title.split(" · ")[0]; }
+function flowHtml(u, s){
+  var from = (s.flowsFrom || []).map(function(r){ return findStep(u, r); }).filter(Boolean), to = flowsInto(u, s);
+  if (!from.length && !to.length) return "";
+  function link(x){ return '<a href="#/unit/' + x.u.id + "/" + x.s.id + '">' + esc(short(x.s)) + "</a>"; }
+  return '<div class="flow">' + (from.length ? '<span class="muted">흘러온 곳</span> ' + from.map(link).join(" · ") : '<span class="muted">발원지</span>') +
+    (to.length ? '<span><span class="muted">흘러가는 곳</span> ' + to.map(link).join(" · ") + "</span>" : "") + "</div>";
+}
+
+/* ---------- 화면: 물길 지도 ---------- */
+function viewMap(){
+  var html = '<section class="view"><div class="card lead"><h2>한 줄기 산에서 시작한 물</h2><p>각 개념은 빗방울이다. 같은 골짜기(영역)를 따라 흐르다가 다른 골짜기의 물과 합쳐진다. 주황 테두리는 여러 물줄기가 만나는 합류점이다. 원을 누르면 그 개념으로 갑니다.</p></div>';
+  UNITS.forEach(function(u){
+    var W = 640, top = 64, rowH = 78, laneW = W / STREAMS.length;
+    var lanes = {}; STREAMS.forEach(function(t, i){ lanes[t.id] = i; });
+    var pos = {};
+    u.steps.forEach(function(s, i){ pos[s.id] = { x: laneW * (lanes[s.stream] || 0) + laneW / 2, y: top + 30 + i * rowH }; });
+    var H = top + 30 + u.steps.length * rowH;
+    var svg = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(u.title) + ' 물길 지도">';
+    STREAMS.forEach(function(t, i){
+      var x = laneW * i + laneW / 2;
+      svg += '<line class="laneline" x1="' + x + '" y1="' + (top - 6) + '" x2="' + x + '" y2="' + (H - 10) + '"/>';
+      svg += '<text class="lane" x="' + x + '" y="20" text-anchor="middle">' + esc(t.name) + "</text>";
+      svg += '<text class="lanehint" x="' + x + '" y="38" text-anchor="middle">' + esc(t.hint.length > 12 ? t.hint.slice(0, 11) + "…" : t.hint) + "</text>";
+    });
+    u.steps.forEach(function(s){
+      (s.flowsFrom || []).forEach(function(r){
+        var f = findStep(u, r); if (!f || f.u !== u) return;
+        var a = pos[f.s.id], b = pos[s.id], my = (a.y + b.y) / 2;
+        svg += '<path class="edge" d="M' + a.x + "," + a.y + " C" + a.x + "," + my + " " + b.x + "," + my + " " + b.x + "," + b.y + '"/>';
+      });
+    });
+    u.steps.forEach(function(s){
+      var p = pos[s.id], meet = (s.flowsFrom || []).length > 1, cls = "node" + (stepDone(u, s) ? " done" : "") + (meet ? " meet" : "");
+      var label = short(s), anchor = p.x > W - laneW ? "end" : "start", lx = anchor === "end" ? p.x - 16 : p.x + 16;
+      svg += '<a href="#/unit/' + u.id + "/" + s.id + '" class="' + cls + '"><title>' + esc(s.title) + '</title><circle cx="' + p.x + '" cy="' + p.y + '" r="' + (meet ? 10 : 8) + '"/>' +
+        '<text x="' + lx + '" y="' + (p.y + 4) + '" text-anchor="' + anchor + '">' + esc(label) + "</text></a>";
+    });
+    svg += "</svg>";
+    html += '<div class="card"><h2 class="eyebrow">단원 ' + u.no + "</h2><h3>" + esc(u.title) + '</h3><div class="mapbox">' + svg + '</div><p class="small muted" style="margin-top:8px">채워진 원은 문제를 모두 익힌 개념이다.</p></div>';
+  });
+  html += "</section>";
+  h(html);
+}
+
+/* ---------- 화면: 복습 ---------- */
+function viewReview(){
+  var list = dueList();
+  var html = '<section class="view"><div class="card"><h2 class="eyebrow">오늘의 복습</h2>';
+  if (!list.length) {
+    var next = allChecks().map(function(x){ return store.checks[ckey(x.u, x.c)]; }).filter(Boolean).map(function(r){ return r.due; }).sort()[0];
+    html += '<div class="empty">지금 복습할 문제가 없습니다.' + (next ? "<br>다음 복습: " + new Date(next).toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" }) : "<br>단원 문제를 먼저 풀어 보세요.") + "</div>";
+  } else {
+    html += '<p class="small muted">자료를 덮고 풀어 보세요. 맞히면 다음 복습이 1일 → 7일 → 30일로 늘어나고, 틀리면 오늘 다시 나옵니다.</p>';
+    list.forEach(function(x){ html += '<div class="muted small" style="margin-top:14px">' + esc(x.s.title) + "</div>" + checkHtml(x.u, x.c, "review"); });
+  }
+  html += "</div></section>";
+  h(html);
+  bindChecks();
+}
+
+/* ---------- 화면: 실습실 ---------- */
+var CATALOG = { 101: { name: "우유", price: 3500 }, 102: { name: "빵", price: 2500 }, 103: { name: "사과", price: 1800 } };
+var lab = {
+  me: "A",
+  carts: { A: { 101: 2, 102: 2 }, B: { 101: 5 } },
+  defense: { owner: true, range: true, price: true },
+  tab: "net",
+  last: null,
+  log: [],
+  orders: 0
+};
+function cartTotal(c){ return Object.keys(c).reduce(function(t, id){ return t + c[id] * CATALOG[id].price; }, 0); }
+
+// 모의 서버: 요청 하나를 받아 응답과 각 층에서 일어난 일을 돌려준다
+function server(req){
+  var d = lab.defense, res = { req: req };
+  var owner = req.cartOwner || req.user;
+  var cart = lab.carts[owner];
+  if (req.path.indexOf("/api/cart/items/") === 0) {
+    var pid = +req.path.split("/").pop();
+    var delta = req.body.delta;
+    res.java = "CartItem item = cartService.find(" + (d.owner ? "token.userId()" : "request.cartId()") + ", " + pid + ");\n" +
+      (d.range ? "if (delta < -item.getQuantity() + 1 || delta > 10) throw new BadRequest();\n" : "") +
+      (delta > 0 ? "item.addOne();" : "item.add(" + delta + ");");
+    res.c = "struct CartItem *p = find_item(cart, " + pid + ");\np->quantity += " + delta + ";";
+    res.sql = "UPDATE cart_items\n   SET quantity = quantity + " + delta + "\n WHERE cart_id = '" + owner + "'   -- " + (d.owner ? "토큰 사용자 기준" : "요청이 보낸 id 기준") + "\n   AND product_id = " + pid + (d.range ? "\n   AND quantity + " + delta + " BETWEEN 1 AND 99" : "") + ";";
+    if (d.owner && owner !== req.user) { res.status = 403; res.body = { error: "forbidden", message: "이 장바구니의 주인이 아닙니다" }; res.note = "서버가 토큰의 사용자(" + req.user + ")와 장바구니 주인(" + owner + ")을 비교해 막았다."; return res; }
+    var cur = cart[pid] || 0, nextQ = cur + delta;
+    if (d.range && (typeof delta !== "number" || nextQ < 1 || nextQ > 99 || Math.abs(delta) > 10)) { res.status = 400; res.body = { error: "invalid_delta", message: "수량은 1~99, 한 번에 ±10까지" }; res.note = "서버의 범위 검사가 비정상 값을 거절했다."; return res; }
+    if (nextQ <= 0 && !d.range) { cart[pid] = nextQ; }
+    else if (nextQ <= 0) { delete cart[pid]; }
+    else cart[pid] = nextQ;
+    res.status = 200;
+    res.body = { product_id: pid, quantity: cart[pid] || 0, unit_price: CATALOG[pid].price };
+    res.note = owner !== req.user ? "취약! " + req.user + "가 " + owner + "의 장바구니를 바꿨다 (IDOR)." : (nextQ < 1 ? "취약! 수량이 " + nextQ + "개가 됐다. 이대로 주문하면 금액이 음수다." : "수량이 " + cur + " → " + nextQ + "로 바뀌었다.");
+    if (req.method === "POST") res.note = CATALOG[pid].name + " 줄을 새로 추가했다.";
+    return res;
+  }
+  if (req.path === "/api/orders") {
+    var total = 0, lines = [];
+    Object.keys(cart).forEach(function(id){
+      var price = d.price ? CATALOG[id].price : (req.body.prices && req.body.prices[id] != null ? req.body.prices[id] : CATALOG[id].price);
+      total += price * cart[id]; lines.push(CATALOG[id].name + " " + cart[id] + "개 × " + won(price));
+    });
+    res.java = "Order order = orderService.place(token.userId());\n// 가격: " + (d.price ? "상품 테이블에서 다시 읽음" : "요청 본문의 prices 사용") + "\n// 재고 확인 → 주문 저장 → 장바구니 비우기";
+    res.c = "/* 주문은 서버 서비스 계층에서 처리 */";
+    res.sql = "BEGIN;\nSELECT price, stock FROM products WHERE id IN (" + Object.keys(cart).join(", ") + ") FOR UPDATE;\nINSERT INTO orders (user_id, total) VALUES ('" + req.user + "', " + total + ");\nDELETE FROM cart_items WHERE cart_id = '" + req.user + "';\nCOMMIT;";
+    if (!lines.length) { res.status = 400; res.body = { error: "empty_cart" }; res.note = "장바구니가 비어 있다."; return res; }
+    lab.orders++;
+    res.status = 201;
+    res.body = { order_id: "ORD-" + (1000 + lab.orders), total: total, lines: lines.length };
+    res.note = (total <= 0 ? "취약! " + won(total) + " 주문이 접수됐다. 가격을 클라이언트에서 받았기 때문이다." : "모의 주문 접수: " + lines.join(", ") + " = " + won(total));
+    lab.carts[req.user] = {};
+    return res;
+  }
+  res.status = 404; res.body = { error: "not_found" }; return res;
+}
+function send(req){
+  var res = server(req);
+  lab.last = res;
+  lab.log.unshift(req.user + "  " + req.method + " " + req.path + (req.cartOwner && req.cartOwner !== req.user ? "?cart=" + req.cartOwner : "") + "  →  " + res.status);
+  lab.log = lab.log.slice(0, 20);
+  renderLab();
+}
+function reqText(req){
+  var q = req.cartOwner && req.cartOwner !== req.user ? "?cart=" + req.cartOwner : "";
+  return req.method + " " + req.path + q + " HTTP/1.1\nHost: playax.kr\nAuthorization: Bearer <" + req.user + "의 토큰>\nContent-Type: application/json\n\n" + JSON.stringify(req.body);
+}
+function panelHtml(){
+  var r = lab.last;
+  if (!r) return '<div class="empty">왼쪽 장바구니에서 <b>+</b>를 눌러 보세요.<br>요청이 어떤 층을 지나가는지 여기에 나타납니다.</div>';
+  var t = lab.tab;
+  var head = '<div class="spread" style="margin-bottom:10px"><span class="status s' + String(r.status)[0] + '">' + r.status + "</span><span class=\"small\">" + inline(r.note || "") + "</span></div>";
+  if (t === "net") return head + '<h2 class="eyebrow">요청</h2>' + pre(reqText(r.req), [0]) + '<h2 class="eyebrow">응답</h2>' + pre("HTTP/1.1 " + r.status + "\n" + JSON.stringify(r.body, null, 2), [0]);
+  if (t === "java") return head + pre(r.java, [r.java.split("\n").length - 1]) + '<p class="small muted">서버는 상품 객체를 찾아 메서드에 동작을 맡긴다. 규칙(범위 검사)은 객체 안이나 서비스 계층에 둔다.</p>';
+  if (t === "db") return head + pre(r.sql, [2]) + '<p class="small muted"><code>WHERE</code>가 어느 장바구니의 어느 상품인지 고른다. 실제 코드는 값을 <code>?</code> 바인드 변수로 넘긴다.</p>';
+  if (t === "c") return head + pre(r.c, [1]) + '<p class="small muted">같은 동작을 C로 쓰면 포인터로 구조체를 찾아 멤버를 바꾼다. 주소는 그대로, 값만 바뀐다.</p>';
+  return "";
+}
+function renderLab(){
+  var me = lab.me, cart = lab.carts[me], d = lab.defense;
+  var html = '<section class="view"><div class="lab">';
+  // 왼쪽: 장바구니
+  html += '<div class="view"><div class="card"><div class="spread" style="margin-bottom:6px"><h2 class="eyebrow" style="margin:0">' + me + "의 장바구니</h2>" +
+    '<div class="who" role="group" aria-label="사용자 선택"><button data-who="A" aria-pressed="' + (me === "A") + '">A</button><button data-who="B" aria-pressed="' + (me === "B") + '">B</button></div></div>';
+  var ids = Object.keys(cart);
+  if (!ids.length) html += '<div class="empty">비어 있습니다.</div>';
+  ids.forEach(function(id){
+    html += '<div class="item"><div><div class="name">' + CATALOG[id].name + '</div><div class="muted small">상품 ' + id + " · " + won(CATALOG[id].price) + '</div></div><div class="row">' +
+      '<button class="round" data-delta="-1" data-id="' + id + '" aria-label="' + CATALOG[id].name + ' 하나 빼기">−</button><span class="qty">' + cart[id] + '</span><button class="round" data-delta="1" data-id="' + id + '" aria-label="' + CATALOG[id].name + ' 하나 더">+</button></div></div>';
+  });
+  html += '<div class="total">합계 ' + won(cartTotal(cart)) + "</div>";
+  html += '<div class="row" style="margin-top:12px">';
+  Object.keys(CATALOG).forEach(function(id){ if (!(id in cart)) html += '<button data-add="' + id + '">' + CATALOG[id].name + " 담기</button>"; });
+  html += '<button class="primary" data-order="1"' + (ids.length ? "" : " disabled") + ">주문 체험</button></div></div>";
+  // 공격과 방어
+  html += '<div class="card"><h2 class="eyebrow">공격해 보기</h2><p class="small muted">방어를 끄고 같은 공격을 다시 보내 보세요. 무엇이 막아 주는지 보입니다.</p>' +
+    '<div class="row"><button data-atk="idor">B의 우유 +10 (IDOR)</button><button data-atk="neg">우유 −100 보내기</button><button data-atk="price">0원으로 주문</button></div>' +
+    '<div style="margin-top:10px">' +
+    '<label class="toggle"><input type="checkbox" data-def="owner"' + (d.owner ? " checked" : "") + "><span><b>소유자 확인</b><br><span class=\"small muted\">토큰의 사용자와 장바구니 주인을 비교</span></span></label>" +
+    '<label class="toggle"><input type="checkbox" data-def="range"' + (d.range ? " checked" : "") + "><span><b>입력 범위 검사</b><br><span class=\"small muted\">수량 1~99, 한 번에 ±10</span></span></label>" +
+    '<label class="toggle"><input type="checkbox" data-def="price"' + (d.price ? " checked" : "") + "><span><b>서버 가격 사용</b><br><span class=\"small muted\">요청의 가격을 무시하고 상품 테이블에서 읽음</span></span></label>" +
+    "</div></div></div>";
+  // 오른쪽: 층별 보기
+  var tabs = [["net", "네트워크"], ["java", "Java"], ["db", "DB"], ["c", "C"]];
+  html += '<div class="view"><div class="card"><div class="subtabs" role="tablist">' + tabs.map(function(t){ return '<button role="tab" data-tab="' + t[0] + '" aria-selected="' + (lab.tab === t[0]) + '">' + t[1] + "</button>"; }).join("") + "</div>" + panelHtml() + "</div>";
+  html += '<div class="card"><h2 class="eyebrow">요청 기록</h2>' + (lab.log.length ? '<ul class="log">' + lab.log.map(function(l){ return "<li>" + esc(l) + "</li>"; }).join("") + "</ul>" : '<div class="muted small">아직 보낸 요청이 없습니다.</div>') +
+    '<div class="row" style="margin-top:10px"><button data-reset="1">처음 상태로</button></div></div></div>';
+  html += "</div></section>";
+  h(html);
+
+  app.querySelectorAll("[data-delta]").forEach(function(b){ b.onclick = function(){ send({ user: me, method: "PATCH", path: "/api/cart/items/" + b.dataset.id, body: { delta: +b.dataset.delta } }); }; });
+  app.querySelectorAll("[data-add]").forEach(function(b){ b.onclick = function(){ send({ user: me, method: "POST", path: "/api/cart/items/" + b.dataset.add, body: { delta: 1 } }); }; });
+  app.querySelectorAll("[data-order]").forEach(function(b){ b.onclick = function(){ send({ user: me, method: "POST", path: "/api/orders", body: {} }); }; });
+  app.querySelectorAll("[data-who]").forEach(function(b){ b.onclick = function(){ lab.me = b.dataset.who; renderLab(); }; });
+  app.querySelectorAll("[data-tab]").forEach(function(b){ b.onclick = function(){ lab.tab = b.dataset.tab; renderLab(); }; });
+  app.querySelectorAll("[data-def]").forEach(function(i){ i.onchange = function(){ lab.defense[i.dataset.def] = i.checked; renderLab(); }; });
+  app.querySelectorAll("[data-reset]").forEach(function(b){ b.onclick = function(){ lab.carts = { A: { 101: 2, 102: 2 }, B: { 101: 5 } }; lab.last = null; lab.log = []; renderLab(); }; });
+  app.querySelectorAll("[data-atk]").forEach(function(b){ b.onclick = function(){
+    var k = b.dataset.atk;
+    if (k === "idor") send({ user: "A", cartOwner: "B", method: "PATCH", path: "/api/cart/items/101", body: { delta: 10 } });
+    if (k === "neg") { if (!lab.carts.A[101]) lab.carts.A[101] = 2; send({ user: "A", method: "PATCH", path: "/api/cart/items/101", body: { delta: -100 } }); }
+    if (k === "price") { if (!Object.keys(lab.carts.A).length) lab.carts.A = { 101: 2 }; send({ user: "A", method: "POST", path: "/api/orders", body: { prices: { 101: 0, 102: 0, 103: 0 } } }); }
+    if (lab.me !== "A") { lab.me = "A"; renderLab(); }
+  }; });
+}
+
+/* ---------- 라우터 ---------- */
+function route(){
+  var parts = (location.hash.replace(/^#\/?/, "") || "").split("/");
+  var top = parts[0] || "";
+  document.querySelectorAll("#tabs a").forEach(function(a){
+    var t = a.getAttribute("href").replace("#/", "");
+    if ((t === "" && (top === "" || top === "unit")) || (t && t === top)) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+  });
+  if (top === "unit") viewUnit(parts[1], parts[2]);
+  else if (top === "lab") renderLab();
+  else if (top === "review") viewReview();
+  else if (top === "map") viewMap();
+  else viewHome();
+  renderMeter();
+}
+window.addEventListener("hashchange", route);
+route();
+})();
+</script>
+</body>
+</html>
